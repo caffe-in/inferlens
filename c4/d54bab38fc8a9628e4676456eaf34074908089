@@ -1,0 +1,14 @@
+.gitignore
+  h_08301eb57d3378 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10-trip",
+  "base_commit_sha": "c4d54bab38fc8a9628e4676456eaf34074908089",
+  "prompts": {},
+  "humans": {
+    "h_08301eb57d3378": {
+      "author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
