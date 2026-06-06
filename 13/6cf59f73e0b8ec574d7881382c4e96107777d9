@@ -1,0 +1,49 @@
+client/client.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-27,31-119
+  s_c076d21e7fc91f::t_e970c6d185a837 28-30
+metrics/metrics.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-35
+config/config.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-38
+client/client_test.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-54
+output/output_test.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-30
+example/chat.sh
+  s_c076d21e7fc91f::t_bfb6eed0a20e61 3
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-2
+output/output.go
+  s_c076d21e7fc91f::t_e970c6d185a837 15
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-5,7-14,16
+  s_c076d21e7fc91f::t_dfc0b593651d26 6
+config/config_test.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-27
+.gitignore
+  s_c076d21e7fc91f::t_bfb6eed0a20e61 1-3
+go.mod
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-3
+AGENTS.md
+  s_c076d21e7fc91f::t_282bf23539d18c 1-15,17-19,25-30,32-38
+  s_c076d21e7fc91f::t_5bfcdf85eabc56 16,20-24
+  s_c076d21e7fc91f::t_a8bf59819436fc 31
+README.md
+  s_c076d21e7fc91f::t_e8f2bbc2327579 18-20,23-24
+  s_c076d21e7fc91f::t_7e08f6982baacd 3-17,25-27,29-47,49
+  s_c076d21e7fc91f::t_bfb6eed0a20e61 21-22,28,48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10-trip",
+  "base_commit_sha": "136cf59f73e0b8ec574d7881382c4e96107777d9",
+  "prompts": {},
+  "sessions": {
+    "s_c076d21e7fc91f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9bc6-65f9-7ca0-a9ea-9f9a466faef8",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
