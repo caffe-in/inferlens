@@ -1,0 +1,65 @@
+metrics/metrics.go
+  s_3ba844985c6771::t_57c1a8a4974a06 5-9,12-79,82-94,97-99,101-114,116,118-119,121-128
+.gitignore
+  s_3ba844985c6771::t_292729f8349ff9 3
+README.md
+  s_3ba844985c6771::t_1039aa687c6573 4-5,28,36-38,40-61,68-70,73-74
+metrics/metrics_test.go
+  s_3ba844985c6771::t_b4d19ef27774ec 1-46
+config/config.go
+  s_3ba844985c6771::t_f8d088cdce7af5 7,11-12,15-20,23,25-30,36-44,53-58
+Makefile
+  s_3ba844985c6771::t_55a8b587a653e6 1-36
+client/client.go
+  s_e9aafa8fb46355::t_6a7f2ff0d8c0f8 28-34,39-41
+  s_3ba844985c6771::t_14b9ef0893701a 4,12,21-23,26-27,35,42,50,52,69-70,76-77,80,85,88,92-93,97-98,101-106,109-150,152-154,157
+client/client_test.go
+  s_3ba844985c6771::t_8658b70fe19d04 7,11,16-19,24-30,35-36,41-52,55,63,66,70-71
+cmd/inferlens/main.go
+  s_c076d21e7fc91f::t_7e08f6982baacd 1-7,9-15,18-31,34-42,45-49,53-54,56-59,63-65,67-71,85,92,100,112,120-122,124-125,127
+  s_3ba844985c6771::t_2e90042f5e8da7 32-33,43-44,50-52,55,66,72-79,81-84,86-91,93-95,97-99,101-111,113,123,126
+  s_3ba844985c6771::t_445ffcef483749 8,16-17,80,96,114-119
+  s_3ba844985c6771::t_f9f9098e912dba 60-62
+output/output_test.go
+  s_3ba844985c6771::t_c8ecf1e02e897d 5,10,14-15,18-22,29-46,50-62,64-74,77-83,85-86
+  s_3ba844985c6771::t_f23f68c5ead03b 23-28,75-76
+output/output.go
+  s_3ba844985c6771::t_13ff43793b2d0a 48,115,139-145,169-175
+  s_3ba844985c6771::t_6bf6cfa05577c4 6,9,13-47,49-54,56-114,116-138,146-168,176-182
+example/ping.sh
+  s_3ba844985c6771::t_1039aa687c6573 3
+config/config_test.go
+  s_3ba844985c6771::t_9971c24a902551 3-6,9,16-24,28,35,40-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10-trip",
+  "base_commit_sha": "65a787a18213cd4eb163a373a110c1ecbb378876",
+  "prompts": {},
+  "sessions": {
+    "s_3ba844985c6771": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ebec1-9054-7b00-8bde-cc766b0f2ce3",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_c076d21e7fc91f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9bc6-65f9-7ca0-a9ea-9f9a466faef8",
+        "model": "gpt-5.4"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_e9aafa8fb46355": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019ebec1-9054-7b00-8bde-cc766b0f2ce3",
+        "model": "unknown"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
