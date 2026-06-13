@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -16,18 +18,28 @@ type Client struct {
 }
 
 type ChatRequest struct {
-	Model  string
-	Prompt string
+	Model     string
+	Prompt    string
+	MaxTokens int
 }
 
-type ChatResponse struct {
-	Content string
+type StreamResult struct {
+	StatusCode        int
+	Content           string
+	StartedAt         time.Time
+	HeadersAt         time.Time
+	FirstChunkAt      time.Time
+	FirstTokenAt      time.Time
+	DoneAt            time.Time
+	ChunkCount        int
+	ContentDeltaCount int
 }
 
 type openAIChatRequest struct {
-	Model    string              `json:"model"`
-	Messages []openAIChatMessage `json:"messages"`
-	Stream   bool                `json:"stream"`
+	Model     string              `json:"model"`
+	Messages  []openAIChatMessage `json:"messages"`
+	Stream    bool                `json:"stream"`
+	MaxTokens int                 `json:"max_tokens,omitempty"`
 }
 
 type openAIChatMessage struct {
@@ -35,9 +47,9 @@ type openAIChatMessage struct {
 	Content string `json:"content"`
 }
 
-type openAIChatResponse struct {
+type openAIStreamResponse struct {
 	Choices []struct {
-		Message openAIChatMessage `json:"message"`
+		Delta openAIChatMessage `json:"delta"`
 	} `json:"choices"`
 }
 
@@ -54,54 +66,95 @@ func New(baseURL string) *Client {
 	}
 }
 
-func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, int, error) {
+func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func(string)) (StreamResult, error) {
+	result := StreamResult{StartedAt: time.Now()}
 	body, err := json.Marshal(openAIChatRequest{
 		Model: req.Model,
 		Messages: []openAIChatMessage{
 			{Role: "user", Content: req.Prompt},
 		},
-		Stream: false,
+		Stream:    true,
+		MaxTokens: req.MaxTokens,
 	})
 	if err != nil {
-		return nil, 0, fmt.Errorf("marshal request: %w", err)
+		return result, fmt.Errorf("marshal request: %w", err)
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/chat/completions", bytes.NewReader(body))
 	if err != nil {
-		return nil, 0, fmt.Errorf("build request: %w", err)
+		return result, fmt.Errorf("build request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "text/event-stream")
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
-		return nil, 0, fmt.Errorf("send request: %w", err)
+		result.DoneAt = time.Now()
+		return result, fmt.Errorf("send request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	payload, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("read response: %w", err)
-	}
+	result.StatusCode = resp.StatusCode
+	result.HeadersAt = time.Now()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, resp.StatusCode, parseAPIError(payload, resp.StatusCode)
+		payload, readErr := io.ReadAll(resp.Body)
+		result.DoneAt = time.Now()
+		if readErr != nil {
+			return result, fmt.Errorf("read response: %w", readErr)
+		}
+		return result, parseAPIError(payload, resp.StatusCode)
 	}
 
-	var parsed openAIChatResponse
-	if err := json.Unmarshal(payload, &parsed); err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("decode response: %w", err)
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "data:") {
+			continue
+		}
+
+		data := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
+		if data == "" {
+			continue
+		}
+		if data == "[DONE]" {
+			result.DoneAt = time.Now()
+			return result, nil
+		}
+
+		now := time.Now()
+		result.ChunkCount++
+		if result.FirstChunkAt.IsZero() {
+			result.FirstChunkAt = now
+		}
+
+		var parsed openAIStreamResponse
+		if err := json.Unmarshal([]byte(data), &parsed); err != nil {
+			result.DoneAt = time.Now()
+			return result, fmt.Errorf("decode stream chunk: %w", err)
+		}
+		for _, choice := range parsed.Choices {
+			content := choice.Delta.Content
+			if content == "" {
+				continue
+			}
+			if result.FirstTokenAt.IsZero() {
+				result.FirstTokenAt = now
+			}
+			result.ContentDeltaCount++
+			result.Content += content
+			if onContent != nil {
+				onContent(content)
+			}
+		}
+	}
+	result.DoneAt = time.Now()
+	if err := scanner.Err(); err != nil {
+		return result, fmt.Errorf("read stream: %w", err)
 	}
 
-	if len(parsed.Choices) == 0 {
-		return nil, resp.StatusCode, fmt.Errorf("decode response: no choices returned")
-	}
-
-	content := strings.TrimSpace(parsed.Choices[0].Message.Content)
-	if content == "" {
-		return nil, resp.StatusCode, fmt.Errorf("decode response: empty message content")
-	}
-
-	return &ChatResponse{Content: content}, resp.StatusCode, nil
+	return result, nil
 }
 
 func parseAPIError(payload []byte, statusCode int) error {

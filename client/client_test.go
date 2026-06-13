@@ -4,36 +4,55 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
-func TestChatSuccess(t *testing.T) {
+func TestStreamChatSuccess(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/v1/chat/completions" {
 			t.Fatalf("unexpected path: %s", r.URL.Path)
 		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"choices":[{"message":{"content":"hello from vllm"}}]}`))
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":\"hello\"}}]}\n\n"))
+		_, _ = w.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":\" from vllm\"}}]}\n\n"))
+		_, _ = w.Write([]byte("data: [DONE]\n\n"))
 	}))
 	defer server.Close()
 
 	client := New(server.URL)
-	resp, status, err := client.Chat(context.Background(), ChatRequest{
-		Model:  "qwen",
-		Prompt: "hello",
+	var streamed strings.Builder
+	resp, err := client.StreamChat(context.Background(), ChatRequest{
+		Model:     "qwen",
+		Prompt:    "hello",
+		MaxTokens: 8,
+	}, func(content string) {
+		streamed.WriteString(content)
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if status != http.StatusOK {
-		t.Fatalf("expected status %d, got %d", http.StatusOK, status)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
 	}
 	if resp.Content != "hello from vllm" {
 		t.Fatalf("expected content %q, got %q", "hello from vllm", resp.Content)
 	}
+	if streamed.String() != resp.Content {
+		t.Fatalf("expected streamed content %q, got %q", resp.Content, streamed.String())
+	}
+	if resp.ChunkCount != 2 {
+		t.Fatalf("expected 2 chunks, got %d", resp.ChunkCount)
+	}
+	if resp.ContentDeltaCount != 2 {
+		t.Fatalf("expected 2 content deltas, got %d", resp.ContentDeltaCount)
+	}
+	if resp.FirstTokenAt.IsZero() {
+		t.Fatal("expected first token time")
+	}
 }
 
-func TestChatNon2xx(t *testing.T) {
+func TestStreamChatNon2xx(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(`{"error":{"message":"bad request"}}`))
@@ -41,14 +60,14 @@ func TestChatNon2xx(t *testing.T) {
 	defer server.Close()
 
 	client := New(server.URL)
-	_, status, err := client.Chat(context.Background(), ChatRequest{
+	resp, err := client.StreamChat(context.Background(), ChatRequest{
 		Model:  "qwen",
 		Prompt: "hello",
-	})
+	}, nil)
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if status != http.StatusBadRequest {
-		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, status)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, resp.StatusCode)
 	}
 }
