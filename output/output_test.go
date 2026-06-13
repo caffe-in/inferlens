@@ -2,29 +2,87 @@ package output
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
+	"inferlens/client"
 	"inferlens/metrics"
 )
 
-func TestPrintChatResult(t *testing.T) {
+func TestPrintPingReport(t *testing.T) {
+	start := time.Date(2026, 6, 13, 12, 0, 0, 0, time.UTC)
 	var buf bytes.Buffer
 
-	PrintChatResult(&buf, "hello", metrics.RequestMetrics{
-		StatusCode: 200,
-		Latency:    1500 * time.Millisecond,
+	PrintPingReport(&buf, PingReport{
+		Endpoint: "http://localhost:8000",
+		Model:    "qwen",
+		Result: client.StreamResult{
+			StatusCode:        200,
+			StartedAt:         start,
+			HeadersAt:         start.Add(100 * time.Millisecond),
+			FirstChunkAt:      start.Add(200 * time.Millisecond),
+			FirstTokenAt:      start.Add(250 * time.Millisecond),
+			DoneAt:            start.Add(2 * time.Second),
+			ChunkCount:        3,
+			ContentDeltaCount: 2,
+		},
+		MetricsBefore: metrics.ParseSnapshot(`
+vllm:request_success_total{model_name="qwen"} 10
+vllm:prompt_tokens_total{model_name="qwen"} 100
+vllm:generation_tokens_total{model_name="qwen"} 200
+vllm:num_requests_waiting{model_name="qwen"} 0
+vllm:num_requests_running{model_name="qwen"} 0
+vllm:gpu_cache_usage_perc{model_name="qwen"} 0.12
+`),
+		MetricsAfter: metrics.ParseSnapshot(`
+vllm:request_success_total{model_name="qwen"} 11
+vllm:prompt_tokens_total{model_name="qwen"} 118
+vllm:generation_tokens_total{model_name="qwen"} 264
+vllm:num_requests_waiting{model_name="qwen"} 0
+vllm:num_requests_running{model_name="qwen"} 0
+vllm:gpu_cache_usage_perc{model_name="qwen"} 0.13
+`),
 	})
 
 	got := buf.String()
-	if !strings.Contains(got, "hello") {
-		t.Fatalf("expected response text in output, got %q", got)
+	for _, want := range []string{
+		"--- inferlens ping ---",
+		"status: 200",
+		"first token: 250ms",
+		"request_success: +1",
+		"prompt_tokens: +18",
+		"generation_tokens: +64",
+		"gpu_kv_cache: 12.0% -> 13.0%",
+		"first token latency looks normal",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got %q", want, got)
+		}
 	}
-	if !strings.Contains(got, "status: 200") {
-		t.Fatalf("expected status in output, got %q", got)
+}
+
+func TestPrintPingReportWithMetricsError(t *testing.T) {
+	var buf bytes.Buffer
+	now := time.Now()
+
+	PrintPingReport(&buf, PingReport{
+		Endpoint: "http://localhost:8000",
+		Model:    "qwen",
+		Result: client.StreamResult{
+			StatusCode: 200,
+			StartedAt:  now,
+			DoneAt:     now.Add(time.Second),
+		},
+		MetricsErr: errors.New("connection refused"),
+	})
+
+	got := buf.String()
+	if !strings.Contains(got, "unavailable: connection refused") {
+		t.Fatalf("expected metrics error in output, got %q", got)
 	}
-	if !strings.Contains(got, "latency: 1.5s") {
-		t.Fatalf("expected latency in output, got %q", got)
+	if !strings.Contains(got, "client timeline only") {
+		t.Fatalf("expected degraded diagnosis, got %q", got)
 	}
 }
