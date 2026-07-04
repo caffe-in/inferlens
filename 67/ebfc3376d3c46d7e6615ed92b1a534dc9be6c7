@@ -1,0 +1,53 @@
+cfg/default.yaml
+  s_b69b46737a5d4c::t_6c6f5ecb3b8c1a 1-8
+config/defaults_test.go
+  s_b69b46737a5d4c::t_bf53eaae6391a2 1-13,21-22,29-60,63-81
+  s_b69b46737a5d4c::t_6c6f5ecb3b8c1a 14-20,23-28,61-62
+pkg/mode/offline_test.go
+  s_b69b46737a5d4c::t_bf53eaae6391a2 1-31
+pkg/mode/offline.go
+  s_b69b46737a5d4c::t_58e86236dc2093 1-34,36-37,41-119
+  s_b69b46737a5d4c::t_f00ab54449922e 35,38-40
+pkg/ping/ping.go
+  s_b69b46737a5d4c::t_9ae4bd38078d54 8,10,15-22,27-28,63-112
+pkg/mode/api.go
+  s_b69b46737a5d4c::t_58e86236dc2093 1-23,26-50
+  s_b69b46737a5d4c::t_e0d1244a540c40 24-25
+config/defaults.go
+  s_b69b46737a5d4c::t_58bd517e759b39 1-96,98-103,107-160
+  s_b69b46737a5d4c::t_6c6f5ecb3b8c1a 97,104-106
+pkg/ping/ping_test.go
+  s_b69b46737a5d4c::t_bf53eaae6391a2 1-50
+go.mod
+  s_dbe920d38e482d::t_b1b462d210938f 4
+  s_dbe920d38e482d::t_02d8840de553cd 5
+pkg/mode/mode.go
+  s_b69b46737a5d4c::t_5619cc285cea74 23,49,52-54
+pkg/mode/serve.go
+  s_b69b46737a5d4c::t_58e86236dc2093 1-25,29-71
+  s_b69b46737a5d4c::t_4aa516a31db76b 26-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "67ebfc3376d3c46d7e6615ed92b1a534dc9be6c7",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_dbe920d38e482d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "unknown"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
