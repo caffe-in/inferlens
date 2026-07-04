@@ -29,3 +29,33 @@ func TestRunOfflineHelperDecodesJSON(t *testing.T) {
 		t.Fatalf("unexpected token result: %#v", result)
 	}
 }
+
+func TestOfflineHelperPathFindsRepositoryScript(t *testing.T) {
+	tmp := t.TempDir()
+	scriptsDir := filepath.Join(tmp, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+		t.Fatalf("make scripts dir: %v", err)
+	}
+	helper := filepath.Join(scriptsDir, "vllm_offline_probe.py")
+	if err := os.WriteFile(helper, []byte("print('ok')"), 0o600); err != nil {
+		t.Fatalf("write helper: %v", err)
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+	if err := os.Chdir(tmp); err != nil {
+		t.Fatalf("change working directory: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(wd)
+	})
+
+	got, err := offlineHelperPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != filepath.Join("scripts", "vllm_offline_probe.py") {
+		t.Fatalf("expected repository helper path, got %q", got)
+	}
+}
