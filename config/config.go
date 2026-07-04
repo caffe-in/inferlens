@@ -20,23 +20,60 @@ type Config struct {
 	Timeout         time.Duration
 }
 
-func New(endpoint, metricsEndpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
-	return newConfig(endpoint, metricsEndpoint, model, prompt, maxTokens, timeout, true)
-}
-
-func NewAPI(endpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
-	if strings.TrimSpace(endpoint) == "" {
-		return Config{}, errors.New("api endpoint is required; pass --endpoint or set OPENAI_BASE_URL")
+func NewServe(endpoint, metricsEndpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
+	cfg := newOnlineConfig(endpoint, metricsEndpoint, model, prompt, maxTokens, timeout)
+	if cfg.Endpoint == "" {
+		cfg.Endpoint = DefaultEndpoint
 	}
-	cfg, err := newConfig(endpoint, "", model, prompt, maxTokens, timeout, false)
-	if err != nil {
+	if cfg.MetricsEndpoint == "" {
+		cfg.MetricsEndpoint = strings.TrimRight(cfg.Endpoint, "/") + "/metrics"
+	}
+	if err := validateOnlineConfig(cfg); err != nil {
 		return Config{}, err
 	}
-	cfg.MetricsEndpoint = ""
+	if !isHTTPURL(cfg.MetricsEndpoint) {
+		return Config{}, fmt.Errorf("metrics endpoint must start with http:// or https://: %s", cfg.MetricsEndpoint)
+	}
 	return cfg, nil
 }
 
-func newConfig(endpoint, metricsEndpoint, model, prompt string, maxTokens int, timeout time.Duration, defaultEndpoint bool) (Config, error) {
+func NewAPI(endpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
+	cfg := newOnlineConfig(endpoint, "", model, prompt, maxTokens, timeout)
+	if cfg.Endpoint == "" {
+		return Config{}, errors.New("api endpoint is required; pass --endpoint or set OPENAI_BASE_URL")
+	}
+	if err := validateOnlineConfig(cfg); err != nil {
+		return Config{}, err
+	}
+	return cfg, nil
+}
+
+func NewOffline(model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
+	cfg := Config{
+		Model:     strings.TrimSpace(model),
+		Prompt:    strings.TrimSpace(prompt),
+		MaxTokens: maxTokens,
+		Timeout:   timeout,
+	}
+	if cfg.MaxTokens == 0 {
+		cfg.MaxTokens = DefaultMaxTokens
+	}
+
+	switch {
+	case cfg.Model == "":
+		return Config{}, errors.New("model is required")
+	case cfg.Prompt == "":
+		return Config{}, errors.New("prompt is required")
+	case cfg.MaxTokens < 0:
+		return Config{}, fmt.Errorf("max tokens must be greater than or equal to 0: %d", cfg.MaxTokens)
+	case cfg.Timeout < 0:
+		return Config{}, fmt.Errorf("timeout must be greater than or equal to 0: %s", cfg.Timeout)
+	default:
+		return cfg, nil
+	}
+}
+
+func newOnlineConfig(endpoint, metricsEndpoint, model, prompt string, maxTokens int, timeout time.Duration) Config {
 	cfg := Config{
 		Endpoint:        strings.TrimSpace(endpoint),
 		MetricsEndpoint: strings.TrimSpace(metricsEndpoint),
@@ -46,35 +83,34 @@ func newConfig(endpoint, metricsEndpoint, model, prompt string, maxTokens int, t
 		Timeout:         timeout,
 	}
 
-	if cfg.Endpoint == "" && defaultEndpoint {
-		cfg.Endpoint = DefaultEndpoint
-	}
-	if cfg.MetricsEndpoint == "" && cfg.Endpoint != "" {
-		cfg.MetricsEndpoint = strings.TrimRight(cfg.Endpoint, "/") + "/metrics"
-	}
 	if cfg.MaxTokens == 0 {
 		cfg.MaxTokens = DefaultMaxTokens
 	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = DefaultTimeout
 	}
+	return cfg
+}
 
+func validateOnlineConfig(cfg Config) error {
 	switch {
 	case cfg.Model == "":
-		return Config{}, errors.New("model is required")
+		return errors.New("model is required")
 	case cfg.Prompt == "":
-		return Config{}, errors.New("prompt is required")
+		return errors.New("prompt is required")
 	case cfg.Endpoint == "":
-		return Config{}, errors.New("endpoint is required")
-	case !strings.HasPrefix(cfg.Endpoint, "http://") && !strings.HasPrefix(cfg.Endpoint, "https://"):
-		return Config{}, fmt.Errorf("endpoint must start with http:// or https://: %s", cfg.Endpoint)
-	case !strings.HasPrefix(cfg.MetricsEndpoint, "http://") && !strings.HasPrefix(cfg.MetricsEndpoint, "https://"):
-		return Config{}, fmt.Errorf("metrics endpoint must start with http:// or https://: %s", cfg.MetricsEndpoint)
+		return errors.New("endpoint is required")
+	case !isHTTPURL(cfg.Endpoint):
+		return fmt.Errorf("endpoint must start with http:// or https://: %s", cfg.Endpoint)
 	case cfg.MaxTokens < 0:
-		return Config{}, fmt.Errorf("max tokens must be greater than or equal to 0: %d", cfg.MaxTokens)
+		return fmt.Errorf("max tokens must be greater than or equal to 0: %d", cfg.MaxTokens)
 	case cfg.Timeout < 0:
-		return Config{}, fmt.Errorf("timeout must be greater than or equal to 0: %s", cfg.Timeout)
+		return fmt.Errorf("timeout must be greater than or equal to 0: %s", cfg.Timeout)
 	default:
-		return cfg, nil
+		return nil
 	}
+}
+
+func isHTTPURL(value string) bool {
+	return strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://")
 }

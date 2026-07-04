@@ -23,17 +23,36 @@ type PingReport struct {
 	ProbeErr        error
 }
 
+type OfflineReport struct {
+	Python           string
+	Model            string
+	LoadDuration     time.Duration
+	GenerateDuration time.Duration
+	TotalDuration    time.Duration
+	PromptTokens     int
+	GeneratedTokens  int
+	ProbeErr         error
+}
+
+type reportHeader struct {
+	Mode          string
+	Endpoint      string
+	Model         string
+	Python        string
+	Auth          string
+	Streaming     string
+	ServerMetrics string
+}
+
 func PrintPingReport(w io.Writer, report PingReport) {
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "--- inferlens ping ---")
-	fmt.Fprintf(w, "mode: %s\n", valueOr(report.Mode, "serve"))
-	fmt.Fprintf(w, "endpoint: %s\n", report.Endpoint)
-	fmt.Fprintf(w, "model: %s\n", report.Model)
-	if report.Auth != "" {
-		fmt.Fprintf(w, "auth: %s\n", report.Auth)
-	}
-	fmt.Fprintln(w, "streaming: required")
-	printServerMetricsLine(w, report)
+	printReportHeader(w, reportHeader{
+		Mode:          valueOr(report.Mode, "serve"),
+		Endpoint:      report.Endpoint,
+		Model:         report.Model,
+		Auth:          report.Auth,
+		Streaming:     "required",
+		ServerMetrics: serverMetricsText(report),
+	})
 	if report.Result.StatusCode != 0 {
 		fmt.Fprintf(w, "status: %d\n", report.Result.StatusCode)
 	}
@@ -44,6 +63,61 @@ func PrintPingReport(w io.Writer, report PingReport) {
 	printTimeline(w, report.Result)
 	printMetrics(w, report)
 	printDiagnosis(w, report)
+}
+
+func PrintOfflineReport(w io.Writer, report OfflineReport) {
+	printReportHeader(w, reportHeader{
+		Mode:          "offline",
+		Model:         report.Model,
+		Python:        report.Python,
+		Streaming:     "not applicable",
+		ServerMetrics: "not available in offline mode",
+	})
+	if report.ProbeErr != nil {
+		fmt.Fprintf(w, "error: %v\n", report.ProbeErr)
+	}
+
+	printOfflineTimeline(w, report)
+	printOfflineTokens(w, report)
+}
+
+func printReportHeader(w io.Writer, header reportHeader) {
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "--- inferlens ping ---")
+	fmt.Fprintf(w, "mode: %s\n", header.Mode)
+	if header.Endpoint != "" {
+		fmt.Fprintf(w, "endpoint: %s\n", header.Endpoint)
+	}
+	fmt.Fprintf(w, "model: %s\n", header.Model)
+	if header.Python != "" {
+		fmt.Fprintf(w, "python: %s\n", header.Python)
+	}
+	if header.Auth != "" {
+		fmt.Fprintf(w, "auth: %s\n", header.Auth)
+	}
+	fmt.Fprintf(w, "streaming: %s\n", header.Streaming)
+	fmt.Fprintf(w, "server metrics: %s\n", header.ServerMetrics)
+}
+
+func printOfflineTimeline(w io.Writer, report OfflineReport) {
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "offline timeline:")
+	fmt.Fprintf(w, "  load: %s\n", formatDuration(report.LoadDuration))
+	fmt.Fprintf(w, "  generate: %s\n", formatDuration(report.GenerateDuration))
+	fmt.Fprintf(w, "  total: %s\n", formatDuration(report.TotalDuration))
+}
+
+func printOfflineTokens(w io.Writer, report OfflineReport) {
+	if report.PromptTokens > 0 || report.GeneratedTokens > 0 {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, "tokens:")
+		if report.PromptTokens > 0 {
+			fmt.Fprintf(w, "  prompt: %d\n", report.PromptTokens)
+		}
+		if report.GeneratedTokens > 0 {
+			fmt.Fprintf(w, "  generated: %d\n", report.GeneratedTokens)
+		}
+	}
 }
 
 func printTimeline(w io.Writer, result client.StreamResult) {
@@ -123,12 +197,11 @@ func printDiagnosis(w io.Writer, report PingReport) {
 	}
 }
 
-func printServerMetricsLine(w io.Writer, report PingReport) {
+func serverMetricsText(report PingReport) string {
 	if report.Mode == "api" {
-		fmt.Fprintln(w, "server metrics: not available in api mode")
-		return
+		return "not available in api mode"
 	}
-	fmt.Fprintf(w, "server metrics: %s\n", report.MetricsEndpoint)
+	return report.MetricsEndpoint
 }
 
 func valueOr(value, fallback string) string {

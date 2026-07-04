@@ -119,3 +119,31 @@ func TestPrintPingReportAPIMode(t *testing.T) {
 		}
 	}
 }
+
+func TestPrintOfflineReport(t *testing.T) {
+	var buf bytes.Buffer
+
+	PrintOfflineReport(&buf, OfflineReport{
+		Python:           "python3",
+		Model:            "qwen",
+		LoadDuration:     2 * time.Second,
+		GenerateDuration: 300 * time.Millisecond,
+		TotalDuration:    2300 * time.Millisecond,
+		PromptTokens:     4,
+		GeneratedTokens:  8,
+	})
+
+	got := buf.String()
+	for _, want := range []string{
+		"mode: offline",
+		"python: python3",
+		"streaming: not applicable",
+		"server metrics: not available in offline mode",
+		"load: 2s",
+		"generated: 8",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got %q", want, got)
+		}
+	}
+}

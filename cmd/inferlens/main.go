@@ -38,4 +38,5 @@ func printRootUsage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
 	fmt.Fprintln(os.Stderr, "  inferlens ping --model <model> --prompt <text> [--endpoint <url>]")
 	fmt.Fprintln(os.Stderr, "  inferlens ping api --model <model> --prompt <text> --endpoint <url>")
+	fmt.Fprintln(os.Stderr, "  inferlens ping offline --model <model> --prompt <text> [--python python3]")
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"inferlens/output"
 	"inferlens/pkg/mode"
 )
 
@@ -16,8 +15,6 @@ func Run(args []string, stdout, stderr io.Writer) error {
 		if next, ok := mode.ByName(args[0]); ok {
 			selected = next
 			args = args[1:]
-		} else if args[0] == "offline" {
-			return fmt.Errorf("offline mode is not implemented yet")
 		}
 	}
 
@@ -26,7 +23,7 @@ func Run(args []string, stdout, stderr io.Writer) error {
 	selected.RegisterFlags(fs)
 
 	fs.Usage = func() {
-		fmt.Fprintf(stderr, "Usage: inferlens ping [serve|api] --model <model> --prompt <text> [--endpoint <url>]\n")
+		fmt.Fprintf(stderr, "Usage: inferlens ping [serve|api|offline] --model <model> --prompt <text> [--endpoint <url>]\n")
 		if selected.UsageNote() != "" {
 			fmt.Fprintln(stderr, selected.UsageNote())
 		}
@@ -56,7 +53,5 @@ func Run(args []string, stdout, stderr io.Writer) error {
 		defer cancel()
 	}
 
-	report, probeErr := selected.Ping(ctx, cfg, stdout)
-	output.PrintPingReport(stdout, report)
-	return probeErr
+	return selected.Ping(ctx, cfg, stdout)
 }
