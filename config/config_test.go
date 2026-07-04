@@ -56,3 +56,20 @@ func TestNewAcceptsOverrides(t *testing.T) {
 		t.Fatalf("expected timeout 5s, got %s", cfg.Timeout)
 	}
 }
+
+func TestNewAPIRequiresEndpoint(t *testing.T) {
+	_, err := NewAPI("", "qwen", "hello", 0, 0)
+	if err == nil {
+		t.Fatal("expected error for missing api endpoint")
+	}
+}
+
+func TestNewAPIDoesNotSetMetricsEndpoint(t *testing.T) {
+	cfg, err := NewAPI("https://api.example.com", "qwen", "hello", 0, 0)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.MetricsEndpoint != "" {
+		t.Fatalf("expected no metrics endpoint, got %q", cfg.MetricsEndpoint)
+	}
+}

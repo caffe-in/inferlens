@@ -86,3 +86,36 @@ func TestPrintPingReportWithMetricsError(t *testing.T) {
 		t.Fatalf("expected degraded diagnosis, got %q", got)
 	}
 }
+
+func TestPrintPingReportAPIMode(t *testing.T) {
+	var buf bytes.Buffer
+	now := time.Now()
+
+	PrintPingReport(&buf, PingReport{
+		Mode:     "api",
+		Endpoint: "https://api.example.com",
+		Auth:     "bearer",
+		Model:    "qwen",
+		Result: client.StreamResult{
+			StatusCode:   200,
+			StartedAt:    now,
+			HeadersAt:    now.Add(100 * time.Millisecond),
+			FirstChunkAt: now.Add(200 * time.Millisecond),
+			FirstTokenAt: now.Add(250 * time.Millisecond),
+			DoneAt:       now.Add(time.Second),
+		},
+	})
+
+	got := buf.String()
+	for _, want := range []string{
+		"mode: api",
+		"auth: bearer",
+		"streaming: required",
+		"server metrics: not available in api mode",
+		"server metrics are not available in api mode",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got %q", want, got)
+		}
+	}
+}

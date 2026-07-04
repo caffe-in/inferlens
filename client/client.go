@@ -13,8 +13,9 @@ import (
 )
 
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL     string
+	bearerToken string
+	httpClient  *http.Client
 }
 
 type ChatRequest struct {
@@ -66,6 +67,12 @@ func New(baseURL string) *Client {
 	}
 }
 
+func NewWithBearerToken(baseURL, token string) *Client {
+	c := New(baseURL)
+	c.bearerToken = strings.TrimSpace(token)
+	return c
+}
+
 func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func(string)) (StreamResult, error) {
 	result := StreamResult{StartedAt: time.Now()}
 	body, err := json.Marshal(openAIChatRequest{
@@ -86,6 +93,9 @@ func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
+	if c.bearerToken != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+c.bearerToken)
+	}
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {

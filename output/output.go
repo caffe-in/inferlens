@@ -11,8 +11,10 @@ import (
 )
 
 type PingReport struct {
+	Mode            string
 	Endpoint        string
 	MetricsEndpoint string
+	Auth            string
 	Model           string
 	Result          client.StreamResult
 	MetricsBefore   metrics.Snapshot
@@ -24,8 +26,14 @@ type PingReport struct {
 func PrintPingReport(w io.Writer, report PingReport) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "--- inferlens ping ---")
+	fmt.Fprintf(w, "mode: %s\n", valueOr(report.Mode, "serve"))
 	fmt.Fprintf(w, "endpoint: %s\n", report.Endpoint)
 	fmt.Fprintf(w, "model: %s\n", report.Model)
+	if report.Auth != "" {
+		fmt.Fprintf(w, "auth: %s\n", report.Auth)
+	}
+	fmt.Fprintln(w, "streaming: required")
+	printServerMetricsLine(w, report)
 	if report.Result.StatusCode != 0 {
 		fmt.Fprintf(w, "status: %d\n", report.Result.StatusCode)
 	}
@@ -54,6 +62,10 @@ func printTimeline(w io.Writer, result client.StreamResult) {
 func printMetrics(w io.Writer, report PingReport) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "vllm metrics:")
+	if report.Mode == "api" {
+		fmt.Fprintln(w, "  not available in api mode")
+		return
+	}
 	if report.MetricsErr != nil {
 		fmt.Fprintf(w, "  unavailable: %v\n", report.MetricsErr)
 		return
@@ -90,6 +102,10 @@ func printDiagnosis(w io.Writer, report PingReport) {
 		fmt.Fprintln(w, "  first token latency looks normal")
 	}
 
+	if report.Mode == "api" {
+		fmt.Fprintln(w, "  server metrics are not available in api mode; diagnosis is based on the client timeline only")
+		return
+	}
 	if report.MetricsErr != nil {
 		fmt.Fprintln(w, "  server metrics were unavailable, so diagnosis is based on the client timeline only")
 		return
@@ -105,6 +121,21 @@ func printDiagnosis(w io.Writer, report PingReport) {
 	if after.GPUCacheUsage.Present && after.GPUCacheUsage.Value >= 0.9 {
 		fmt.Fprintln(w, "  gpu kv cache usage is high")
 	}
+}
+
+func printServerMetricsLine(w io.Writer, report PingReport) {
+	if report.Mode == "api" {
+		fmt.Fprintln(w, "server metrics: not available in api mode")
+		return
+	}
+	fmt.Fprintf(w, "server metrics: %s\n", report.MetricsEndpoint)
+}
+
+func valueOr(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
 
 func printDelta(w io.Writer, label string, before, after metrics.Value) {
