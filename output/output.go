@@ -11,8 +11,10 @@ import (
 )
 
 type PingReport struct {
+	Mode            string
 	Endpoint        string
 	MetricsEndpoint string
+	Auth            string
 	Model           string
 	Result          client.StreamResult
 	MetricsBefore   metrics.Snapshot
@@ -21,21 +23,101 @@ type PingReport struct {
 	ProbeErr        error
 }
 
+type OfflineReport struct {
+	Python           string
+	Model            string
+	LoadDuration     time.Duration
+	GenerateDuration time.Duration
+	TotalDuration    time.Duration
+	PromptTokens     int
+	GeneratedTokens  int
+	ProbeErr         error
+}
+
+type reportHeader struct {
+	Mode          string
+	Endpoint      string
+	Model         string
+	Python        string
+	Auth          string
+	Streaming     string
+	ServerMetrics string
+}
+
 func PrintPingReport(w io.Writer, report PingReport) {
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "--- inferlens ping ---")
-	fmt.Fprintf(w, "endpoint: %s\n", report.Endpoint)
-	fmt.Fprintf(w, "model: %s\n", report.Model)
+	printReportHeader(w, reportHeader{
+		Mode:          valueOr(report.Mode, "serve"),
+		Endpoint:      report.Endpoint,
+		Model:         report.Model,
+		Auth:          report.Auth,
+		Streaming:     "required",
+		ServerMetrics: serverMetricsText(report),
+	})
 	if report.Result.StatusCode != 0 {
 		fmt.Fprintf(w, "status: %d\n", report.Result.StatusCode)
-	}
-	if report.ProbeErr != nil {
-		fmt.Fprintf(w, "error: %v\n", report.ProbeErr)
 	}
 
 	printTimeline(w, report.Result)
 	printMetrics(w, report)
 	printDiagnosis(w, report)
+}
+
+func PrintOfflineReport(w io.Writer, report OfflineReport) {
+	printReportHeader(w, reportHeader{
+		Mode:          "offline",
+		Model:         report.Model,
+		Python:        report.Python,
+		Streaming:     "not applicable",
+		ServerMetrics: "not available in offline mode",
+	})
+
+	if hasOfflineTiming(report) {
+		printOfflineTimeline(w, report)
+	}
+	printOfflineTokens(w, report)
+}
+
+func printReportHeader(w io.Writer, header reportHeader) {
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "--- inferlens ping ---")
+	fmt.Fprintf(w, "mode: %s\n", header.Mode)
+	if header.Endpoint != "" {
+		fmt.Fprintf(w, "endpoint: %s\n", header.Endpoint)
+	}
+	fmt.Fprintf(w, "model: %s\n", header.Model)
+	if header.Python != "" {
+		fmt.Fprintf(w, "python: %s\n", header.Python)
+	}
+	if header.Auth != "" {
+		fmt.Fprintf(w, "auth: %s\n", header.Auth)
+	}
+	fmt.Fprintf(w, "streaming: %s\n", header.Streaming)
+	fmt.Fprintf(w, "server metrics: %s\n", header.ServerMetrics)
+}
+
+func printOfflineTimeline(w io.Writer, report OfflineReport) {
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "offline timeline:")
+	fmt.Fprintf(w, "  load: %s\n", formatDuration(report.LoadDuration))
+	fmt.Fprintf(w, "  generate: %s\n", formatDuration(report.GenerateDuration))
+	fmt.Fprintf(w, "  total: %s\n", formatDuration(report.TotalDuration))
+}
+
+func printOfflineTokens(w io.Writer, report OfflineReport) {
+	if report.PromptTokens > 0 || report.GeneratedTokens > 0 {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, "tokens:")
+		if report.PromptTokens > 0 {
+			fmt.Fprintf(w, "  prompt: %d\n", report.PromptTokens)
+		}
+		if report.GeneratedTokens > 0 {
+			fmt.Fprintf(w, "  generated: %d\n", report.GeneratedTokens)
+		}
+	}
+}
+
+func hasOfflineTiming(report OfflineReport) bool {
+	return report.LoadDuration > 0 || report.GenerateDuration > 0 || report.TotalDuration > 0
 }
 
 func printTimeline(w io.Writer, result client.StreamResult) {
@@ -54,6 +136,10 @@ func printTimeline(w io.Writer, result client.StreamResult) {
 func printMetrics(w io.Writer, report PingReport) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "vllm metrics:")
+	if report.Mode == "api" {
+		fmt.Fprintln(w, "  not available in api mode")
+		return
+	}
 	if report.MetricsErr != nil {
 		fmt.Fprintf(w, "  unavailable: %v\n", report.MetricsErr)
 		return
@@ -90,6 +176,10 @@ func printDiagnosis(w io.Writer, report PingReport) {
 		fmt.Fprintln(w, "  first token latency looks normal")
 	}
 
+	if report.Mode == "api" {
+		fmt.Fprintln(w, "  server metrics are not available in api mode; diagnosis is based on the client timeline only")
+		return
+	}
 	if report.MetricsErr != nil {
 		fmt.Fprintln(w, "  server metrics were unavailable, so diagnosis is based on the client timeline only")
 		return
@@ -105,6 +195,20 @@ func printDiagnosis(w io.Writer, report PingReport) {
 	if after.GPUCacheUsage.Present && after.GPUCacheUsage.Value >= 0.9 {
 		fmt.Fprintln(w, "  gpu kv cache usage is high")
 	}
+}
+
+func serverMetricsText(report PingReport) string {
+	if report.Mode == "api" {
+		return "not available in api mode"
+	}
+	return report.MetricsEndpoint
+}
+
+func valueOr(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
 
 func printDelta(w io.Writer, label string, before, after metrics.Value) {

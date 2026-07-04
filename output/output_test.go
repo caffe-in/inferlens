@@ -86,3 +86,85 @@ func TestPrintPingReportWithMetricsError(t *testing.T) {
 		t.Fatalf("expected degraded diagnosis, got %q", got)
 	}
 }
+
+func TestPrintPingReportAPIMode(t *testing.T) {
+	var buf bytes.Buffer
+	now := time.Now()
+
+	PrintPingReport(&buf, PingReport{
+		Mode:     "api",
+		Endpoint: "https://api.example.com",
+		Auth:     "bearer",
+		Model:    "qwen",
+		Result: client.StreamResult{
+			StatusCode:   200,
+			StartedAt:    now,
+			HeadersAt:    now.Add(100 * time.Millisecond),
+			FirstChunkAt: now.Add(200 * time.Millisecond),
+			FirstTokenAt: now.Add(250 * time.Millisecond),
+			DoneAt:       now.Add(time.Second),
+		},
+	})
+
+	got := buf.String()
+	for _, want := range []string{
+		"mode: api",
+		"auth: bearer",
+		"streaming: required",
+		"server metrics: not available in api mode",
+		"server metrics are not available in api mode",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got %q", want, got)
+		}
+	}
+}
+
+func TestPrintOfflineReport(t *testing.T) {
+	var buf bytes.Buffer
+
+	PrintOfflineReport(&buf, OfflineReport{
+		Python:           "python3",
+		Model:            "qwen",
+		LoadDuration:     2 * time.Second,
+		GenerateDuration: 300 * time.Millisecond,
+		TotalDuration:    2300 * time.Millisecond,
+		PromptTokens:     4,
+		GeneratedTokens:  8,
+	})
+
+	got := buf.String()
+	for _, want := range []string{
+		"mode: offline",
+		"python: python3",
+		"streaming: not applicable",
+		"server metrics: not available in offline mode",
+		"load: 2s",
+		"generated: 8",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected output to contain %q, got %q", want, got)
+		}
+	}
+}
+
+func TestPrintOfflineReportWithErrorOmitsEmptyTimeline(t *testing.T) {
+	var buf bytes.Buffer
+
+	PrintOfflineReport(&buf, OfflineReport{
+		Python:   "python3",
+		Model:    "qwen",
+		ProbeErr: errors.New("vllm missing"),
+	})
+
+	got := buf.String()
+	for _, unwanted := range []string{
+		"error:",
+		"offline timeline:",
+		"unavailable",
+	} {
+		if strings.Contains(got, unwanted) {
+			t.Fatalf("expected output to omit %q, got %q", unwanted, got)
+		}
+	}
+}

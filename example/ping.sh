@@ -1,3 +1,12 @@
 #!/usr/bin/env bash
 
-./artifacts/inferlens ping --model Qwen/Qwen2.5-0.5B-Instruct --prompt "hello" --endpoint http://localhost:8000
+set -euo pipefail
+
+MODEL="${MODEL:-Qwen/Qwen2.5-0.5B-Instruct}"
+PROMPT="${PROMPT:-hello}"
+ENDPOINT="${ENDPOINT:-http://localhost:8000}"
+
+./artifacts/inferlens ping serve \
+  --endpoint "$ENDPOINT" \
+  --model "$MODEL" \
+  --prompt "$PROMPT"

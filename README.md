@@ -1,15 +1,18 @@
 # inferlens
-A lightweight observability and benchmarking toolkit for self-hosted LLM inference services.
+A lightweight observability and debugging CLI for self-hosted LLM inference services.
 
-## v0.0.1 Goal
-The current milestone is a local `ping` probe for vLLM-compatible inference services. It sends one streaming OpenAI-compatible chat request, captures a client-side request timeline, reads vLLM `/metrics` before and after the probe, and prints a readable performance diagnosis.
+## v0.0.2 Goal
+InferLens `ping` probes one inference request and prints a readable client timeline plus mode-specific diagnostics.
+
+`inferlens ping` is equivalent to `inferlens ping serve` and remains focused on the local vLLM serve loop. v0.0.2 also adds `ping api` for user-provided OpenAI-compatible streaming APIs and `ping offline` for local vLLM offline inference through the bundled Python helper.
 
 ## Requirements
 - Go 1.23+
-- A local vLLM server exposing an OpenAI-compatible API on `http://localhost:8000`
+- For `ping serve`: a vLLM OpenAI-compatible server, usually `http://localhost:8000`
+- For `ping offline`: a Python environment with `vllm` installed
 
 ## Quick Start
-Start vLLM locally. Example:
+Start vLLM locally:
 
 ```bash
 vllm serve Qwen/Qwen2.5-0.5B-Instruct
@@ -18,59 +21,105 @@ vllm serve Qwen/Qwen2.5-0.5B-Instruct
 Build the CLI:
 
 ```bash
-mkdir -p artifacts
-go build -o artifacts/inferlens ./cmd/inferlens
+make build
 ```
 
-Run InferLens:
+Run the default serve probe:
 
 ```bash
 ./artifacts/inferlens ping --model Qwen/Qwen2.5-0.5B-Instruct --prompt "hello"
 ```
 
-Expected output:
+This is the same as:
 
-```text
-Hello! How can I help you today?
-
---- inferlens ping ---
-endpoint: http://localhost:8000
-model: Qwen/Qwen2.5-0.5B-Instruct
-status: 200
-
-client timeline:
-  total: 742ms
-  headers: 45ms
-  first chunk: 210ms
-  first token: 215ms
-  stream: 532ms
-  chunks: 12
-  content deltas: 10
-  output rate: 18.9 deltas/s
-
-vllm metrics:
-  request_success: +1
-  prompt_tokens: +8
-  generation_tokens: +10
-  waiting: 0 -> 0
-  running: 0 -> 0
-  gpu_kv_cache: 12.0% -> 12.4%
-
-diagnosis:
-  first token latency looks normal
-  no queue buildup observed in before/after snapshot
+```bash
+./artifacts/inferlens ping serve --model Qwen/Qwen2.5-0.5B-Instruct --prompt "hello"
 ```
 
+## Ping Modes
+### `ping serve`
+Use this for a local or self-hosted vLLM server. It sends one streaming chat completion request and reads vLLM `/metrics` before and after the probe.
+
+```bash
+./artifacts/inferlens ping serve \
+  --endpoint http://localhost:8000 \
+  --model Qwen/Qwen2.5-0.5B-Instruct \
+  --prompt "hello"
+```
+
+If `/metrics` is unavailable, the probe can still succeed and the report marks server metrics as unavailable.
+
+### `ping api`
+Use this for a user-provided OpenAI-compatible streaming API. It measures client-side streaming behavior only and does not inspect vLLM server metrics.
+
+```bash
+OPENAI_API_KEY=... \
+./artifacts/inferlens ping api \
+  --endpoint https://api.example.com \
+  --model your-model \
+  --prompt "hello"
+```
+
+`OPENAI_API_KEY` is optional. When it is empty, InferLens sends no `Authorization` header. API mode requires streaming chat completions in v0.0.2.
+
+### `ping offline`
+Use this for one local vLLM offline inference. InferLens runs `scripts/vllm_offline_probe.py` internally and reports model load/generation timing.
+
+```bash
+./artifacts/inferlens ping offline \
+  --python python3 \
+  --model Qwen/Qwen2.5-0.5B-Instruct \
+  --prompt "hello"
+```
+
+There is no `--helper` flag; the helper path is an internal packaging detail.
+
+## Configuration
+InferLens reads ping defaults in this order, with later layers overriding earlier layers:
+
+```text
+Go built-in defaults < cfg/default.yaml < --config < environment < CLI flags
+```
+
+Default config shape:
+
+```yaml
+serve:
+  endpoint: http://localhost:8000
+  timeout: 60s
+api:
+  timeout: 60s
+offline:
+  python: python3
+  timeout: 0
+```
+
+Use a custom config file with:
+
+```bash
+./artifacts/inferlens ping --config ./my-inferlens.yaml api --model your-model --prompt "hello"
+```
+
+Environment variables:
+
+- `OPENAI_BASE_URL`: default endpoint for `ping api`
+- `OPENAI_API_KEY`: bearer token for `ping api`
+- `INFERLENS_PYTHON`: default Python interpreter for `ping offline`
+
+API tokens are not read from config files or CLI flags.
+
 ## Flags
-- `--model`: model name served by vLLM
-- `--prompt`: prompt text to send
-- `--endpoint`: vLLM base URL, defaults to `http://localhost:8000`
-- `--metrics-endpoint`: vLLM metrics URL, defaults to `<endpoint>/metrics`
-- `--max-tokens`: maximum generated tokens for the probe, defaults to `128`
-- `--timeout`: probe timeout, defaults to `60s`
+- `--config`: ping YAML config path
+- `--model`: model name
+- `--prompt`: prompt text
+- `--endpoint`: OpenAI-compatible base URL for `serve` or `api`
+- `--metrics-endpoint`: vLLM metrics URL for `serve`
+- `--python`: Python interpreter for `offline`
+- `--max-tokens`: maximum generated tokens, defaults to `128`
+- `--timeout`: probe timeout; `offline` defaults to `0`, meaning no active timeout
 
 ## Notes
-- v0.0.1 is intentionally a single active probe, not a benchmark loop.
-- If `/metrics` is unavailable, InferLens still prints the client timeline and marks server metrics as unavailable.
+- v0.0.2 is still a single active probe, not a benchmark loop.
+- `serve` ignores `OPENAI_API_KEY` so local probes do not inherit unrelated credentials.
 - Local build artifacts should go under `artifacts/`, which is intentionally gitignored.
 - Grafana, benchmarking, Kubernetes scheduling, and MLOps workflows are future milestones.

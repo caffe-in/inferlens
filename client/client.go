@@ -13,8 +13,9 @@ import (
 )
 
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL     string
+	bearerToken string
+	httpClient  *http.Client
 }
 
 type ChatRequest struct {
@@ -43,8 +44,9 @@ type openAIChatRequest struct {
 }
 
 type openAIChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role             string `json:"role"`
+	Content          string `json:"content"`
+	ReasoningContent string `json:"reasoning_content,omitempty"`
 }
 
 type openAIStreamResponse struct {
@@ -64,6 +66,12 @@ func New(baseURL string) *Client {
 		baseURL:    strings.TrimRight(baseURL, "/"),
 		httpClient: &http.Client{},
 	}
+}
+
+func NewWithBearerToken(baseURL, token string) *Client {
+	c := New(baseURL)
+	c.bearerToken = strings.TrimSpace(token)
+	return c
 }
 
 func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func(string)) (StreamResult, error) {
@@ -86,6 +94,9 @@ func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
+	if c.bearerToken != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+c.bearerToken)
+	}
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {
@@ -136,6 +147,9 @@ func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func
 		}
 		for _, choice := range parsed.Choices {
 			content := choice.Delta.Content
+			if content == "" {
+				content = choice.Delta.ReasoningContent
+			}
 			if content == "" {
 				continue
 			}
