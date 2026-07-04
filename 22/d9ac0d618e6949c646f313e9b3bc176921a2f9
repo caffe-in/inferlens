@@ -1,0 +1,60 @@
+client/client_test.go
+  s_b69b46737a5d4c::t_ded27fb1948470 74-93
+output/output.go
+  s_b69b46737a5d4c::t_82d1e3d83ca752 14,17,29,32-36,65-68,105-108,126-138
+.gitignore
+  s_e66e70c25f5659::t_9eba4c91787d18 2
+pkg/ping/ping.go
+  s_b69b46737a5d4c::t_c6e94fd4ed4681 16-17,19,30-31,59
+  s_b69b46737a5d4c::t_4d34699c59f129 1-9,11-13,15,18,20-25,27-29,32-45,47-57,62
+  s_dbe920d38e482d::t_c4f12345731ab4 10
+  s_b69b46737a5d4c::t_a0e1ad0d5c4caf 58,60-61
+  s_b69b46737a5d4c::t_94a105c8c7c72b 14,26,46
+output/output_test.go
+  s_b69b46737a5d4c::t_ded27fb1948470 89-121
+config/config.go
+  s_b69b46737a5d4c::t_26a54093edd6f6 28-30,35
+  s_b69b46737a5d4c::t_82d1e3d83ca752 24-27,31-34,36-39,49,52,67-68
+config/config_test.go
+  s_b69b46737a5d4c::t_ded27fb1948470 59-75
+client/client.go
+  s_b69b46737a5d4c::t_82d1e3d83ca752 16-18,70-75,96-98
+pkg/mode/mode.go
+  s_b69b46737a5d4c::t_94a105c8c7c72b 5,27-28,35,37,43-49,51-57,59-64,68-70,73-76,108-110,116-119,122-123
+  s_b69b46737a5d4c::t_c6e94fd4ed4681 1-4,6-26,29-34,36,38-42,50,58,65-67,71-72,77-107,111-115,120-121,124-159
+cmd/inferlens/main.go
+  s_b69b46737a5d4c::t_82d1e3d83ca752 40
+  s_b69b46737a5d4c::t_4d34699c59f129 7,25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "22d9ac0d618e6949c646f313e9b3bc176921a2f9",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_dbe920d38e482d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "unknown"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_e66e70c25f5659": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd1-8537-7ce0-bfbd-87326d68a2fd",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
