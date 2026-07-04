@@ -1,0 +1,28 @@
+README.md
+  s_b69b46737a5d4c::t_68f4f3851360d1 2,4-7,11-12,15,24,27,33-78,81-94,97-110,112-119,122-123
+Makefile
+  s_b69b46737a5d4c::t_68f4f3851360d1 8,18,25-38,46-48
+pkg/ping/ping_test.go
+  s_b69b46737a5d4c::t_b6de131dc2a4dd 4-8,10-11,58-179
+example/ping.sh
+  s_b69b46737a5d4c::t_68f4f3851360d1 3-12
+pkg/mode/offline_test.go
+  s_b69b46737a5d4c::t_b6de131dc2a4dd 32-42,53-61
+  s_b69b46737a5d4c::t_116e7f93215352 43-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "b57afaf790a0d4f0de931b3e9aded2255ac24c1e",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
