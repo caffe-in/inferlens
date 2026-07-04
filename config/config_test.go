@@ -19,8 +19,8 @@ func TestNewServeUsesDefaultEndpoint(t *testing.T) {
 	if cfg.MaxTokens != DefaultMaxTokens {
 		t.Fatalf("expected default max tokens %d, got %d", DefaultMaxTokens, cfg.MaxTokens)
 	}
-	if cfg.Timeout != DefaultTimeout {
-		t.Fatalf("expected default timeout %s, got %s", DefaultTimeout, cfg.Timeout)
+	if cfg.Timeout != 0 {
+		t.Fatalf("expected no timeout, got %s", cfg.Timeout)
 	}
 }
 
@@ -71,6 +71,9 @@ func TestNewAPIDoesNotSetMetricsEndpoint(t *testing.T) {
 	}
 	if cfg.MetricsEndpoint != "" {
 		t.Fatalf("expected no metrics endpoint, got %q", cfg.MetricsEndpoint)
+	}
+	if cfg.Timeout != 0 {
+		t.Fatalf("expected no timeout, got %s", cfg.Timeout)
 	}
 }
 

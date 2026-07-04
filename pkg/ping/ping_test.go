@@ -82,6 +82,28 @@ func TestRunUsesConfigEndpointAsFlagDefault(t *testing.T) {
 	}
 }
 
+func TestRunCLITimeoutZeroOverridesDefault(t *testing.T) {
+	server := newStreamingServer(t, nil)
+	defer server.Close()
+
+	var stdout, stderr bytes.Buffer
+	err := Run([]string{
+		"api",
+		"--endpoint", server.URL,
+		"--model", "qwen",
+		"--prompt", "hello",
+		"--timeout", "0",
+	}, &stdout, &stderr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v\nstderr: %s", err, stderr.String())
+	}
+
+	got := stdout.String()
+	if strings.Contains(got, "total: unavailable") {
+		t.Fatalf("expected --timeout 0 to disable timeout, got %q", got)
+	}
+}
+
 func TestRunCLIEndpointOverridesEnvAndConfig(t *testing.T) {
 	configServer := newStreamingServer(t, func(r *http.Request) {
 		t.Fatalf("config endpoint should not be called: %s", r.URL.Path)

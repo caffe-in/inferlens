@@ -86,9 +86,6 @@ func newOnlineConfig(endpoint, metricsEndpoint, model, prompt string, maxTokens 
 	if cfg.MaxTokens == 0 {
 		cfg.MaxTokens = DefaultMaxTokens
 	}
-	if cfg.Timeout == 0 {
-		cfg.Timeout = DefaultTimeout
-	}
 	return cfg
 }
 
