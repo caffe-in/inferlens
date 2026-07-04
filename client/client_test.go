@@ -91,3 +91,36 @@ func TestStreamChatBearerToken(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+func TestStreamChatReasoningContent(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte("data: {\"choices\":[{\"delta\":{\"content\":null,\"reasoning_content\":\"thinking\"}}]}\n\n"))
+		_, _ = w.Write([]byte("data: [DONE]\n\n"))
+	}))
+	defer server.Close()
+
+	client := New(server.URL)
+	var streamed strings.Builder
+	resp, err := client.StreamChat(context.Background(), ChatRequest{
+		Model:  "deepseek-v4-flash",
+		Prompt: "hello",
+	}, func(content string) {
+		streamed.WriteString(content)
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.Content != "thinking" {
+		t.Fatalf("expected reasoning content, got %q", resp.Content)
+	}
+	if streamed.String() != "thinking" {
+		t.Fatalf("expected streamed reasoning content, got %q", streamed.String())
+	}
+	if resp.ContentDeltaCount != 1 {
+		t.Fatalf("expected 1 content delta, got %d", resp.ContentDeltaCount)
+	}
+	if resp.FirstTokenAt.IsZero() {
+		t.Fatal("expected first token time")
+	}
+}

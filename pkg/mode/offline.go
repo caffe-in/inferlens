@@ -96,11 +96,28 @@ func runOfflineHelper(ctx context.Context, python, helper, model, prompt string,
 		return offlineHelperResult{}, fmt.Errorf("run offline helper: %s", message)
 	}
 
-	var result offlineHelperResult
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+	result, err := decodeOfflineHelperResult(stdout.String())
+	if err != nil {
 		return offlineHelperResult{}, fmt.Errorf("decode offline helper output: %w", err)
 	}
 	return result, nil
+}
+
+func decodeOfflineHelperResult(output string) (offlineHelperResult, error) {
+	lines := strings.Split(output, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+
+		var result offlineHelperResult
+		if err := json.Unmarshal([]byte(line), &result); err != nil {
+			return offlineHelperResult{}, err
+		}
+		return result, nil
+	}
+	return offlineHelperResult{}, errors.New("empty helper output")
 }
 
 func offlineHelperPath() (string, error) {

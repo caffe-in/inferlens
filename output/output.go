@@ -56,9 +56,6 @@ func PrintPingReport(w io.Writer, report PingReport) {
 	if report.Result.StatusCode != 0 {
 		fmt.Fprintf(w, "status: %d\n", report.Result.StatusCode)
 	}
-	if report.ProbeErr != nil {
-		fmt.Fprintf(w, "error: %v\n", report.ProbeErr)
-	}
 
 	printTimeline(w, report.Result)
 	printMetrics(w, report)
@@ -73,11 +70,10 @@ func PrintOfflineReport(w io.Writer, report OfflineReport) {
 		Streaming:     "not applicable",
 		ServerMetrics: "not available in offline mode",
 	})
-	if report.ProbeErr != nil {
-		fmt.Fprintf(w, "error: %v\n", report.ProbeErr)
-	}
 
-	printOfflineTimeline(w, report)
+	if hasOfflineTiming(report) {
+		printOfflineTimeline(w, report)
+	}
 	printOfflineTokens(w, report)
 }
 
@@ -118,6 +114,10 @@ func printOfflineTokens(w io.Writer, report OfflineReport) {
 			fmt.Fprintf(w, "  generated: %d\n", report.GeneratedTokens)
 		}
 	}
+}
+
+func hasOfflineTiming(report OfflineReport) bool {
+	return report.LoadDuration > 0 || report.GenerateDuration > 0 || report.TotalDuration > 0
 }
 
 func printTimeline(w io.Writer, result client.StreamResult) {

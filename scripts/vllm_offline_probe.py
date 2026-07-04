@@ -14,6 +14,25 @@ def token_count(value):
         return 0
 
 
+def render_chat_prompt(llm, prompt):
+    try:
+        tokenizer = llm.get_tokenizer()
+    except AttributeError:
+        return prompt
+
+    if tokenizer is None or not hasattr(tokenizer, "apply_chat_template"):
+        return prompt
+
+    try:
+        return tokenizer.apply_chat_template(
+            [{"role": "user", "content": prompt}],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+    except Exception:
+        return prompt
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -31,7 +50,8 @@ def main():
     llm = LLM(model=args.model)
     loaded = time.perf_counter()
 
-    outputs = llm.generate([args.prompt], SamplingParams(max_tokens=args.max_tokens))
+    prompt = render_chat_prompt(llm, args.prompt)
+    outputs = llm.generate([prompt], SamplingParams(max_tokens=args.max_tokens))
     generated = time.perf_counter()
 
     request_output = outputs[0]

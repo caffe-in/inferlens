@@ -44,8 +44,9 @@ type openAIChatRequest struct {
 }
 
 type openAIChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role             string `json:"role"`
+	Content          string `json:"content"`
+	ReasoningContent string `json:"reasoning_content,omitempty"`
 }
 
 type openAIStreamResponse struct {
@@ -146,6 +147,9 @@ func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func
 		}
 		for _, choice := range parsed.Choices {
 			content := choice.Delta.Content
+			if content == "" {
+				content = choice.Delta.ReasoningContent
+			}
 			if content == "" {
 				continue
 			}

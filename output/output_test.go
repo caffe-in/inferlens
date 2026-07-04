@@ -147,3 +147,24 @@ func TestPrintOfflineReport(t *testing.T) {
 		}
 	}
 }
+
+func TestPrintOfflineReportWithErrorOmitsEmptyTimeline(t *testing.T) {
+	var buf bytes.Buffer
+
+	PrintOfflineReport(&buf, OfflineReport{
+		Python:   "python3",
+		Model:    "qwen",
+		ProbeErr: errors.New("vllm missing"),
+	})
+
+	got := buf.String()
+	for _, unwanted := range []string{
+		"error:",
+		"offline timeline:",
+		"unavailable",
+	} {
+		if strings.Contains(got, unwanted) {
+			t.Fatalf("expected output to omit %q, got %q", unwanted, got)
+		}
+	}
+}

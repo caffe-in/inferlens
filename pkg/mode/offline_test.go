@@ -10,7 +10,7 @@ import (
 func TestRunOfflineHelperDecodesJSON(t *testing.T) {
 	tmp := t.TempDir()
 	helper := filepath.Join(tmp, "helper.sh")
-	err := os.WriteFile(helper, []byte(`printf '{"content":"hello","load_ms":100,"generate_ms":20,"total_ms":120,"prompt_tokens":3,"generated_tokens":4}'`), 0o700)
+	err := os.WriteFile(helper, []byte(`printf 'INFO vllm startup\n{"content":"hello","load_ms":100,"generate_ms":20,"total_ms":120,"prompt_tokens":3,"generated_tokens":4}\n'`), 0o700)
 	if err != nil {
 		t.Fatalf("write helper: %v", err)
 	}
