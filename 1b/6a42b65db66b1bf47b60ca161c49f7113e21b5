@@ -1,0 +1,41 @@
+output/output_test.go
+  s_b69b46737a5d4c::t_5fc5532adff100 122-149
+config/config.go
+  s_b69b46737a5d4c::t_1944187d6b06ea 98,100,102,104,106,108
+  s_b69b46737a5d4c::t_8a88440bbccdb6 51-75
+  s_b69b46737a5d4c::t_424ce6327ff643 23-37,41-42,45,76,92-93,95,103,110,113-115
+config/config_test.go
+  s_b69b46737a5d4c::t_16c5c1dce0f04f 8-9,27-28,34-35,41-42
+  s_b69b46737a5d4c::t_5fc5532adff100 76-88
+pkg/ping/ping.go
+  s_b69b46737a5d4c::t_89cc59e45c472c 56
+  s_b69b46737a5d4c::t_8a88440bbccdb6 26
+scripts/vllm_offline_probe.py
+  s_b69b46737a5d4c::t_8a88440bbccdb6 1-52
+cmd/inferlens/main.go
+  s_b69b46737a5d4c::t_8a88440bbccdb6 41
+output/output.go
+  s_b69b46737a5d4c::t_23e1d6fc3c342a 37-46,48-55,69-75,78-89,91-100,102,108,110,200,202,204
+  s_b69b46737a5d4c::t_8a88440bbccdb6 26-36,68,76-77,90,101,103-107,109,111-120
+pkg/mode/mode.go
+  s_b69b46737a5d4c::t_ae6b237e0c91ab 83
+  s_b69b46737a5d4c::t_8a88440bbccdb6 4,6-7,12-14,26-28,45-46,156-165,169-185,187-193,195-211,230-273
+  s_b69b46737a5d4c::t_89cc59e45c472c 36,86,103,114-115,136,145,152-153,186,194,212
+  s_b69b46737a5d4c::t_4efaf6a196e372 166-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "1b6a42b65db66b1bf47b60ca161c49f7113e21b5",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
