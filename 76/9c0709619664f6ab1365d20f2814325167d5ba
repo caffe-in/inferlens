@@ -1,0 +1,21 @@
+pkg/ping/ping_test.go
+  s_b69b46737a5d4c::t_6ed18471f70bb2 85-106
+config/config_test.go
+  s_b69b46737a5d4c::t_b3009fcc9416c3 22-23,75-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "769c0709619664f6ab1365d20f2814325167d5ba",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
