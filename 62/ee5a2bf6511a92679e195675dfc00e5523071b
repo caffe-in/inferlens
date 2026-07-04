@@ -1,0 +1,31 @@
+pkg/mode/offline_test.go
+  s_b69b46737a5d4c::t_812f20ebe38f9a 13
+scripts/vllm_offline_probe.py
+  s_b69b46737a5d4c::t_3a15f6c2551b0e 17-35,53-54
+output/output.go
+  s_b69b46737a5d4c::t_cb9cc90cf99676 74-76,119-120
+output/output_test.go
+  s_b69b46737a5d4c::t_3cecb0a952ea07 150-170
+client/client_test.go
+  s_b69b46737a5d4c::t_b40d6e007e5b4d 94-126
+client/client.go
+  s_b69b46737a5d4c::t_0bbc2a08d98381 47-49,150-152
+pkg/mode/offline.go
+  s_b69b46737a5d4c::t_ac412035b7b241 99-100,106-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.28-trip",
+  "base_commit_sha": "62ee5a2bf6511a92679e195675dfc00e5523071b",
+  "prompts": {},
+  "sessions": {
+    "s_b69b46737a5d4c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f2bd9-1da7-7d30-ad05-2d4ae7ef7cb0",
+        "model": "gpt-5.5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
