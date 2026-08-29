@@ -9,12 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"inferlens/runtime"
+
 	"gopkg.in/yaml.v3"
 )
 
 const DefaultConfigPath = "cfg/default.yaml"
 
 type ModeDefaults struct {
+	Runtime         string
 	Endpoint        string
 	MetricsEndpoint string
 	Python          string
@@ -31,6 +34,7 @@ type PingDefaults struct {
 func BuiltinPingDefaults() PingDefaults {
 	return PingDefaults{
 		Serve: ModeDefaults{
+			Runtime:   runtime.NameVLLM,
 			Endpoint:  DefaultEndpoint,
 			MaxTokens: DefaultMaxTokens,
 			Timeout:   DefaultTimeout,
@@ -108,6 +112,9 @@ func mergePingConfigFile(defaults *PingDefaults, path string, required bool) err
 }
 
 func mergeModeDefaults(defaults *ModeDefaults, cfg modeConfig) {
+	if cfg.Runtime != nil {
+		defaults.Runtime = strings.TrimSpace(*cfg.Runtime)
+	}
 	if cfg.Endpoint != nil {
 		defaults.Endpoint = strings.TrimSpace(*cfg.Endpoint)
 	}
@@ -132,6 +139,7 @@ type pingConfig struct {
 }
 
 type modeConfig struct {
+	Runtime         *string       `yaml:"runtime"`
 	Endpoint        *string       `yaml:"endpoint"`
 	MetricsEndpoint *string       `yaml:"metrics_endpoint"`
 	Python          *string       `yaml:"python"`

@@ -8,18 +8,21 @@ import (
 
 	"inferlens/client"
 	"inferlens/metrics"
+	"inferlens/runtime"
 )
 
 type PingReport struct {
 	Mode            string
+	Runtime         string
 	Endpoint        string
 	MetricsEndpoint string
 	Auth            string
 	Model           string
 	Result          client.StreamResult
-	MetricsBefore   metrics.Snapshot
-	MetricsAfter    metrics.Snapshot
-	MetricsErr      error
+	Health          runtime.Health
+	HealthErr       error
+	Observations    runtime.Report
+	ObservationsErr error
 	ProbeErr        error
 }
 
@@ -36,10 +39,12 @@ type OfflineReport struct {
 
 type reportHeader struct {
 	Mode          string
+	Runtime       string
 	Endpoint      string
 	Model         string
 	Python        string
 	Auth          string
+	Health        string
 	Streaming     string
 	ServerMetrics string
 }
@@ -47,9 +52,11 @@ type reportHeader struct {
 func PrintPingReport(w io.Writer, report PingReport) {
 	printReportHeader(w, reportHeader{
 		Mode:          valueOr(report.Mode, "serve"),
+		Runtime:       report.Runtime,
 		Endpoint:      report.Endpoint,
 		Model:         report.Model,
 		Auth:          report.Auth,
+		Health:        healthText(report),
 		Streaming:     "required",
 		ServerMetrics: serverMetricsText(report),
 	})
@@ -58,7 +65,7 @@ func PrintPingReport(w io.Writer, report PingReport) {
 	}
 
 	printTimeline(w, report.Result)
-	printMetrics(w, report)
+	printObservations(w, report)
 	printDiagnosis(w, report)
 }
 
@@ -81,6 +88,9 @@ func printReportHeader(w io.Writer, header reportHeader) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "--- inferlens ping ---")
 	fmt.Fprintf(w, "mode: %s\n", header.Mode)
+	if header.Runtime != "" {
+		fmt.Fprintf(w, "runtime: %s\n", header.Runtime)
+	}
 	if header.Endpoint != "" {
 		fmt.Fprintf(w, "endpoint: %s\n", header.Endpoint)
 	}
@@ -90,6 +100,9 @@ func printReportHeader(w io.Writer, header reportHeader) {
 	}
 	if header.Auth != "" {
 		fmt.Fprintf(w, "auth: %s\n", header.Auth)
+	}
+	if header.Health != "" {
+		fmt.Fprintf(w, "health: %s\n", header.Health)
 	}
 	fmt.Fprintf(w, "streaming: %s\n", header.Streaming)
 	fmt.Fprintf(w, "server metrics: %s\n", header.ServerMetrics)
@@ -133,30 +146,33 @@ func printTimeline(w io.Writer, result client.StreamResult) {
 	fmt.Fprintf(w, "  output rate: %s\n", formatRate(result))
 }
 
-func printMetrics(w io.Writer, report PingReport) {
+func printObservations(w io.Writer, report PingReport) {
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "vllm metrics:")
 	if report.Mode == "api" {
+		fmt.Fprintln(w, "server observations:")
 		fmt.Fprintln(w, "  not available in api mode")
 		return
 	}
-	if report.MetricsErr != nil {
-		fmt.Fprintf(w, "  unavailable: %v\n", report.MetricsErr)
+	if report.ObservationsErr != nil {
+		fmt.Fprintln(w, "server observations:")
+		fmt.Fprintf(w, "  unavailable: %v\n", report.ObservationsErr)
 		return
 	}
 
-	before := report.MetricsBefore.Core()
-	after := report.MetricsAfter.Core()
-	printDelta(w, "request_success", before.RequestSuccess, after.RequestSuccess)
-	printDelta(w, "prompt_tokens", before.PromptTokens, after.PromptTokens)
-	printDelta(w, "generation_tokens", before.GenerationTokens, after.GenerationTokens)
-	printBeforeAfter(w, "waiting", before.WaitingRequests, after.WaitingRequests)
-	printBeforeAfter(w, "running", before.RunningRequests, after.RunningRequests)
-	printPercentBeforeAfter(w, "gpu_kv_cache", before.GPUCacheUsage, after.GPUCacheUsage)
-	printPercentBeforeAfter(w, "cpu_kv_cache", before.CPUCacheUsage, after.CPUCacheUsage)
-	printDelta(w, "preemptions", before.Preemptions, after.Preemptions)
-	printDelta(w, "prefix_cache_hits", before.PrefixCacheHits, after.PrefixCacheHits)
-	printDelta(w, "prefix_cache_queries", before.PrefixCacheQueries, after.PrefixCacheQueries)
+	fmt.Fprintln(w, "common observations:")
+	common := report.Observations.Common
+	printObservation(w, common.PromptTokens)
+	printObservation(w, common.GeneratedTokens)
+	printObservation(w, common.RunningRequests)
+	printObservation(w, common.WaitingRequests)
+
+	if len(report.Observations.Native) > 0 {
+		fmt.Fprintln(w, "")
+		fmt.Fprintf(w, "%s observations:\n", valueOr(report.Runtime, "runtime"))
+		for _, observation := range report.Observations.Native {
+			printObservation(w, observation)
+		}
+	}
 }
 
 func printDiagnosis(w io.Writer, report PingReport) {
@@ -180,19 +196,20 @@ func printDiagnosis(w io.Writer, report PingReport) {
 		fmt.Fprintln(w, "  server metrics are not available in api mode; diagnosis is based on the client timeline only")
 		return
 	}
-	if report.MetricsErr != nil {
+	if report.ObservationsErr != nil {
 		fmt.Fprintln(w, "  server metrics were unavailable, so diagnosis is based on the client timeline only")
 		return
 	}
 
-	after := report.MetricsAfter.Core()
-	before := report.MetricsBefore.Core()
-	if after.WaitingRequests.Present && after.WaitingRequests.Value > 0 {
+	waiting := report.Observations.Common.WaitingRequests
+	if waiting.After.Present && waiting.After.Value > 0 {
 		fmt.Fprintln(w, "  requests were waiting after the probe, which suggests queue pressure")
-	} else if before.WaitingRequests.Present && after.WaitingRequests.Present {
+	} else if waiting.Before.Present && waiting.After.Present {
 		fmt.Fprintln(w, "  no queue buildup observed in before/after snapshot")
 	}
-	if after.GPUCacheUsage.Present && after.GPUCacheUsage.Value >= 0.9 {
+
+	gpuCache, ok := findObservation(report.Observations.Native, runtime.KeyGPUKVCache)
+	if report.Runtime == runtime.NameVLLM && ok && gpuCache.After.Present && gpuCache.After.Value >= 0.9 {
 		fmt.Fprintln(w, "  gpu kv cache usage is high")
 	}
 }
@@ -204,6 +221,28 @@ func serverMetricsText(report PingReport) string {
 	return report.MetricsEndpoint
 }
 
+func healthText(report PingReport) string {
+	if report.Mode == "api" {
+		return ""
+	}
+	if report.HealthErr != nil {
+		return fmt.Sprintf("unavailable: %v", report.HealthErr)
+	}
+
+	switch {
+	case report.Health.StatusCode >= 200 && report.Health.StatusCode < 300:
+		return "healthy"
+	case report.Health.StatusCode != 0:
+		return fmt.Sprintf("unhealthy (status %d)", report.Health.StatusCode)
+	default:
+		// runtime.CheckHealth only returns a zero-value Health alongside a
+		// non-nil error (handled above), so StatusCode == 0 here should be
+		// unreachable. Kept as a defensive fallback in case that contract
+		// ever changes.
+		return "unavailable"
+	}
+}
+
 func valueOr(value, fallback string) string {
 	if value == "" {
 		return fallback
@@ -211,26 +250,51 @@ func valueOr(value, fallback string) string {
 	return value
 }
 
-func printDelta(w io.Writer, label string, before, after metrics.Value) {
-	delta := metrics.Delta(before, after)
-	if !delta.Present {
+func printObservation(w io.Writer, observation runtime.Observation) {
+	value := "unavailable"
+	switch observation.Format {
+	case runtime.FormatCounterDelta:
+		delta := metrics.Delta(observation.Before, observation.After)
+		if delta.Present {
+			value = formatSignedNumber(delta.Value)
+		}
+	case runtime.FormatGaugeBeforeAfter:
+		value = formatObservationValues(observation, formatNumber)
+	case runtime.FormatRatioPercentage:
+		value = formatObservationValues(observation, formatPercent)
+	case runtime.FormatSingleRate:
+		if observation.After.Present {
+			value = fmt.Sprintf("%.1f tok/s", observation.After.Value)
+		}
+	}
+
+	if observation.Source == "" {
+		fmt.Fprintf(w, "  %s: %s\n", observation.Key, value)
 		return
 	}
-	fmt.Fprintf(w, "  %s: %s\n", label, formatSignedNumber(delta.Value))
+	fmt.Fprintf(w, "  %s: %s  [%s]\n", observation.Key, value, observation.Source)
 }
 
-func printBeforeAfter(w io.Writer, label string, before, after metrics.Value) {
-	if !before.Present || !after.Present {
-		return
+func formatObservationValues(observation runtime.Observation, format func(float64) string) string {
+	switch {
+	case observation.Before.Present && observation.After.Present:
+		return format(observation.Before.Value) + " -> " + format(observation.After.Value)
+	case observation.After.Present:
+		return format(observation.After.Value)
+	case observation.Before.Present:
+		return format(observation.Before.Value)
+	default:
+		return "unavailable"
 	}
-	fmt.Fprintf(w, "  %s: %s -> %s\n", label, formatNumber(before.Value), formatNumber(after.Value))
 }
 
-func printPercentBeforeAfter(w io.Writer, label string, before, after metrics.Value) {
-	if !before.Present || !after.Present {
-		return
+func findObservation(observations []runtime.Observation, key string) (runtime.Observation, bool) {
+	for _, observation := range observations {
+		if observation.Key == key {
+			return observation, true
+		}
 	}
-	fmt.Fprintf(w, "  %s: %s -> %s\n", label, formatPercent(before.Value), formatPercent(after.Value))
+	return runtime.Observation{}, false
 }
 
 func formatSince(start, end time.Time) string {

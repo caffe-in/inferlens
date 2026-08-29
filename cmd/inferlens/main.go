@@ -33,10 +33,10 @@ func run(args []string) error {
 }
 
 func printRootUsage() {
-	fmt.Fprintln(os.Stderr, "InferLens probes a vLLM-compatible inference server.")
+	fmt.Fprintln(os.Stderr, "InferLens probes self-hosted and OpenAI-compatible inference servers.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  inferlens ping --model <model> --prompt <text> [--endpoint <url>]")
+	fmt.Fprintln(os.Stderr, "  inferlens ping [serve] --runtime <vllm|llamacpp> --model <model> --prompt <text> [--endpoint <url>]")
 	fmt.Fprintln(os.Stderr, "  inferlens ping api --model <model> --prompt <text> --endpoint <url>")
 	fmt.Fprintln(os.Stderr, "  inferlens ping offline --model <model> --prompt <text> [--python python3]")
 }

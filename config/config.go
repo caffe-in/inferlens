@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"inferlens/runtime"
 )
 
 const DefaultEndpoint = "http://localhost:8000"
@@ -12,6 +14,7 @@ const DefaultMaxTokens = 128
 const DefaultTimeout = 60 * time.Second
 
 type Config struct {
+	Runtime         string
 	Endpoint        string
 	MetricsEndpoint string
 	Model           string
@@ -20,13 +23,28 @@ type Config struct {
 	Timeout         time.Duration
 }
 
-func NewServe(endpoint, metricsEndpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
+func NewServe(
+	runtimeName string,
+	endpoint string,
+	metricsEndpoint string,
+	model string,
+	prompt string,
+	maxTokens int,
+	timeout time.Duration,
+) (Config, error) {
 	cfg := newOnlineConfig(endpoint, metricsEndpoint, model, prompt, maxTokens, timeout)
+	cfg.Runtime = strings.TrimSpace(runtimeName)
+	if cfg.Runtime == "" {
+		cfg.Runtime = runtime.NameVLLM
+	}
 	if cfg.Endpoint == "" {
 		cfg.Endpoint = DefaultEndpoint
 	}
 	if cfg.MetricsEndpoint == "" {
 		cfg.MetricsEndpoint = strings.TrimRight(cfg.Endpoint, "/") + "/metrics"
+	}
+	if _, err := runtime.NewObserver(cfg.Runtime); err != nil {
+		return Config{}, err
 	}
 	if err := validateOnlineConfig(cfg); err != nil {
 		return Config{}, err

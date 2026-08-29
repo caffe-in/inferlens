@@ -12,6 +12,7 @@ func TestLoadPingDefaultsMergesFilesAndEnv(t *testing.T) {
 	tmp := t.TempDir()
 	defaultPath := writeTestConfig(t, tmp, "default.yaml", `
 serve:
+  runtime: llamacpp
   endpoint: http://localhost:9000
   metrics_endpoint: http://localhost:9000/metrics
 api:
@@ -37,6 +38,9 @@ offline:
 
 	if defaults.Serve.Endpoint != "http://localhost:9000" {
 		t.Fatalf("expected serve endpoint from default config, got %q", defaults.Serve.Endpoint)
+	}
+	if defaults.Serve.Runtime != "llamacpp" {
+		t.Fatalf("expected serve runtime from default config, got %q", defaults.Serve.Runtime)
 	}
 	if defaults.Serve.MetricsEndpoint != "http://localhost:9000/metrics" {
 		t.Fatalf("expected serve metrics endpoint from default config, got %q", defaults.Serve.MetricsEndpoint)
