@@ -174,13 +174,13 @@ func (c *Client) StreamChat(ctx context.Context, req ChatRequest, onContent func
 func parseAPIError(payload []byte, statusCode int) error {
 	var apiErr apiErrorResponse
 	if err := json.Unmarshal(payload, &apiErr); err == nil && strings.TrimSpace(apiErr.Error.Message) != "" {
-		return fmt.Errorf("vllm returned status %d: %s", statusCode, apiErr.Error.Message)
+		return fmt.Errorf("server returned status %d: %s", statusCode, apiErr.Error.Message)
 	}
 
 	message := strings.TrimSpace(string(payload))
 	if message == "" {
-		return fmt.Errorf("vllm returned status %d", statusCode)
+		return fmt.Errorf("server returned status %d", statusCode)
 	}
 
-	return fmt.Errorf("vllm returned status %d: %s", statusCode, message)
+	return fmt.Errorf("server returned status %d: %s", statusCode, message)
 }

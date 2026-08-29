@@ -70,6 +70,9 @@ func TestStreamChatNon2xx(t *testing.T) {
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, resp.StatusCode)
 	}
+	if !strings.Contains(err.Error(), "server returned status 400") {
+		t.Fatalf("expected runtime-neutral status error, got %v", err)
+	}
 }
 
 func TestStreamChatBearerToken(t *testing.T) {

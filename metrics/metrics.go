@@ -18,19 +18,6 @@ type Snapshot struct {
 	Values map[string]float64
 }
 
-type CoreSnapshot struct {
-	RequestSuccess     Value
-	PromptTokens       Value
-	GenerationTokens   Value
-	RunningRequests    Value
-	WaitingRequests    Value
-	GPUCacheUsage      Value
-	CPUCacheUsage      Value
-	Preemptions        Value
-	PrefixCacheHits    Value
-	PrefixCacheQueries Value
-}
-
 func FetchSnapshot(ctx context.Context, endpoint string) (Snapshot, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -79,21 +66,6 @@ func ParseSnapshot(payload string) Snapshot {
 	return Snapshot{Values: values}
 }
 
-func (s Snapshot) Core() CoreSnapshot {
-	return CoreSnapshot{
-		RequestSuccess:     s.first("vllm:request_success_total", "vllm:request_success"),
-		PromptTokens:       s.first("vllm:prompt_tokens_total", "vllm:prompt_tokens"),
-		GenerationTokens:   s.first("vllm:generation_tokens_total", "vllm:generation_tokens"),
-		RunningRequests:    s.first("vllm:num_requests_running"),
-		WaitingRequests:    s.first("vllm:num_requests_waiting"),
-		GPUCacheUsage:      s.first("vllm:gpu_cache_usage_perc", "vllm:kv_cache_usage_perc"),
-		CPUCacheUsage:      s.first("vllm:cpu_cache_usage_perc"),
-		Preemptions:        s.first("vllm:num_preemptions_total", "vllm:num_preemptions"),
-		PrefixCacheHits:    s.first("vllm:prefix_cache_hits_total", "vllm:prefix_cache_hits"),
-		PrefixCacheQueries: s.first("vllm:prefix_cache_queries_total", "vllm:prefix_cache_queries"),
-	}
-}
-
 func Delta(before, after Value) Value {
 	if !before.Present || !after.Present {
 		return Value{}
@@ -118,7 +90,8 @@ func parseSample(line string) (string, float64, bool) {
 	return name, value, true
 }
 
-func (s Snapshot) first(names ...string) Value {
+// First returns the first present metric from names.
+func (s Snapshot) First(names ...string) Value {
 	for _, name := range names {
 		value, ok := s.Values[name]
 		if ok {

@@ -105,7 +105,7 @@ func flagTakesValue(arg string) bool {
 		return false
 	}
 	switch arg {
-	case "--model", "--prompt", "--endpoint", "--metrics-endpoint", "--max-tokens", "--timeout", "--python":
+	case "--model", "--prompt", "--endpoint", "--metrics-endpoint", "--runtime", "--max-tokens", "--timeout", "--python":
 		return true
 	default:
 		return false
