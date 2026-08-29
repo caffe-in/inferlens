@@ -1,0 +1,108 @@
+metrics/metrics.go
+  s_50a29cc0b263a7::t_f23c96a3032889 93-94
+metrics/metrics_test.go
+  s_50a29cc0b263a7::t_9cfa951f772825 5,18-20,22-24,26-28,30-32
+cfg/default.yaml
+  s_50a29cc0b263a7::t_f23c96a3032889 2
+runtime/health.go
+  s_5fa2dcfc5c3782::t_25a1d0c0ee0d76 6
+  s_50a29cc0b263a7::t_5a764f4f8842e3 1-5,7-13,16-32,39,41
+  s_5fa2dcfc5c3782::t_cf1419b562ac36 33-38
+  s_50a29cc0b263a7::t_add4aef897b7c9 14-15,40
+output/output.go
+  s_50a29cc0b263a7::t_3cf57c1e2912a4 11,16,22-25,42,47,55,59,68,91-93,104-106,149,152,156,158,163-167,175,199,204-205,207,210,212,224-231,234,237,242-245,253-272,275,278-287,291-295,297
+  s_5fa2dcfc5c3782::t_44d43ae48d14fc 211
+  s_50a29cc0b263a7::t_add4aef897b7c9 157,162,232-233,235-236
+  s_5fa2dcfc5c3782::t_dd7e9035354a3f 238-241
+  s_5fa2dcfc5c3782::t_a2590d60e31e97 169-174
+config/defaults_test.go
+  s_50a29cc0b263a7::t_9cfa951f772825 15,42-43
+runtime/llamacpp.go
+  s_50a29cc0b263a7::t_5a764f4f8842e3 1-6,8-57,65-75,81-83,85-97
+  s_50a29cc0b263a7::t_add4aef897b7c9 58-60,62-64
+  s_50a29cc0b263a7::t_17f697f10f1ae0 7
+  s_5fa2dcfc5c3782::t_03d2965e980f25 61
+  s_5fa2dcfc5c3782::t_a2faf220ca4796 76-80,84
+pkg/ping/ping_test.go
+  s_50a29cc0b263a7::t_28580ff7831b43 12,61-78,163,165,167-169,171-172,174-234,239-253,273-275,277-279,281-282,284,287,295-304,306-309,311-313,315-319,323,327,329-355,359,363-374,423-424,426-429,432-435,438-439,441,445,447-451
+  s_50a29cc0b263a7::t_9d98e9e5294057 254-272,375-379,381,383-386,388,390-404
+  s_50a29cc0b263a7::t_2493488aa9766c 5,166,170,276,280,305,310,314,320-322,324-326,328,356-358,360-362,380,382,387,389,425,430-431,436-437,440,442-444,446,454-464
+  s_50a29cc0b263a7::t_177d619e822273 164
+  s_50a29cc0b263a7::t_17f697f10f1ae0 452-453,465-473
+pkg/mode/serve.go
+  s_5fa2dcfc5c3782::t_3a7f36f01a0fef 53
+  s_50a29cc0b263a7::t_4a373618df2e06 6,14,21,31-37,41-49,54-57,59-60,63,69,72,76-78,89-92
+  s_50a29cc0b263a7::t_add4aef897b7c9 58,83
+runtime/vllm.go
+  s_50a29cc0b263a7::t_17f697f10f1ae0 7
+  s_50a29cc0b263a7::t_5a764f4f8842e3 1-6,8-9,16-60,62-101
+  s_5fa2dcfc5c3782::t_46bb63c61046b8 61
+  s_5fa2dcfc5c3782::t_aab74e93c7abec 10-15
+README.md
+  s_50a29cc0b263a7::t_ae793fd7f1c060 4-5,7,11,30-33,39-42,47-49,53,59-77,80,90,115,143,145,151,153-154
+config/config.go
+  s_5fa2dcfc5c3782::t_3b51cacae4c1d8 46-47
+  s_50a29cc0b263a7::t_f23c96a3032889 8-9,17,26-34,36-39
+runtime/runtime.go
+  s_50a29cc0b263a7::t_5a764f4f8842e3 1-4,8,13-16,43,46-52,54-91,96,98-100,107-126
+  s_50a29cc0b263a7::t_9d98e9e5294057 12,53
+  s_5fa2dcfc5c3782::t_6ba21e5ccd18e0 5-7,9-11,17-42
+  s_5fa2dcfc5c3782::t_dd36135e6a5def 92-95,97,101-106
+  s_50a29cc0b263a7::t_17f697f10f1ae0 44-45
+client/client_test.go
+  s_50a29cc0b263a7::t_9cfa951f772825 73-75
+client/client.go
+  s_50a29cc0b263a7::t_4a373618df2e06 177,182,185
+config/config_test.go
+  s_50a29cc0b263a7::t_9cfa951f772825 6-7,11,18-20,33,40,47-55,62-64,76-79
+runtime/runtime_test.go
+  s_50a29cc0b263a7::t_b4842a46b7e94f 5,114,118
+  s_50a29cc0b263a7::t_be3718947d11ea 73,108,143,154-155,157-159,162-166,168-179,188,192
+  s_50a29cc0b263a7::t_3f23bda55b69d6 1-4,6-72,74-107,109-113,115-117,119-142,144-153,156,160-161,167,180-187,189-191,193-231
+cmd/inferlens/main.go
+  s_50a29cc0b263a7::t_4a373618df2e06 36
+  s_50a29cc0b263a7::t_2f500143454b7e 39
+pkg/ping/ping.go
+  s_50a29cc0b263a7::t_f23c96a3032889 108
+config/defaults.go
+  s_50a29cc0b263a7::t_f23c96a3032889 12-13,20,37,115-117,142
+output/output_test.go
+  s_50a29cc0b263a7::t_9d98e9e5294057 34,69,71
+  s_50a29cc0b263a7::t_a2ff9dc39c77e7 12,20,28,36-42,44-54,60-61,64-67,88,94,104-111,113-137,139-152,154-162,190
+  s_50a29cc0b263a7::t_177d619e822273 43
+  s_8a311681312cde::t_57b14eaff92457 84-87
+  s_5fa2dcfc5c3782::t_e81bffbb93bb58 153
+  s_50a29cc0b263a7::t_be3718947d11ea 19,112,138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "215958ec5d09bd7aaae18c76f9ca73ff46d78e6d",
+  "prompts": {},
+  "sessions": {
+    "s_50a29cc0b263a7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a04c56-a473-7130-a8c3-29e2d5a9d563",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_5fa2dcfc5c3782": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb3522e35ffejXdfAhXCEvDaNz",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    },
+    "s_8a311681312cde": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a04c56-a473-7130-a8c3-29e2d5a9d563",
+        "model": "unknown"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
