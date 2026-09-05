@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"inferlens/bench"
 	"inferlens/pkg/ping"
 	"inferlens/runtime"
 )
@@ -25,6 +26,8 @@ func run(args []string) error {
 	switch args[0] {
 	case "ping":
 		return ping.Run(args[1:], os.Stdout, os.Stderr)
+	case "bench":
+		return bench.Run(args[1:], os.Stdout, os.Stderr)
 	case "-h", "--help", "help":
 		printRootUsage()
 		return nil
@@ -42,4 +45,5 @@ func printRootUsage() {
 	fmt.Fprintln(os.Stderr, "  inferlens ping api --model <model> --prompt <text> --endpoint <url>")
 	fmt.Fprintln(os.Stderr, "  inferlens ping offline --model <model> --prompt <text> [--python python3]")
 	fmt.Fprintln(os.Stderr, "  inferlens ping kserve --name <isvc> --endpoint <url> --model <model> --prompt <text> [--namespace ns]")
+	fmt.Fprintln(os.Stderr, "  inferlens bench --endpoint <url> --model <model> --prompt <text> [--requests N] [--concurrency C]")
 }
