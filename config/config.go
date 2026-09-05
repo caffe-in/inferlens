@@ -21,6 +21,7 @@ type Config struct {
 	Prompt          string
 	MaxTokens       int
 	Timeout         time.Duration
+	Retries         int
 	Name            string
 	Namespace       string
 	Kubeconfig      string

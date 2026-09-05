@@ -52,6 +52,7 @@ type baseOptions struct {
 	endpoint  string
 	maxTokens int
 	timeout   time.Duration
+	retries   int
 }
 
 func (o *baseOptions) register(fs *flag.FlagSet, defaults config.ModeDefaults) {
@@ -60,14 +61,15 @@ func (o *baseOptions) register(fs *flag.FlagSet, defaults config.ModeDefaults) {
 	fs.StringVar(&o.endpoint, "endpoint", defaults.Endpoint, "Base URL for the OpenAI-compatible server")
 	fs.IntVar(&o.maxTokens, "max-tokens", defaults.MaxTokens, "Maximum generated tokens for the probe")
 	fs.DurationVar(&o.timeout, "timeout", defaults.Timeout, "Timeout for the probe")
+	fs.IntVar(&o.retries, "retries", 0, "Retry transient failures (connection errors, 5xx) before any content is streamed")
 }
 
 func streamChat(ctx context.Context, probeClient *client.Client, cfg config.Config, stdout io.Writer) (client.StreamResult, error) {
-	return probeClient.StreamChat(ctx, client.ChatRequest{
+	return probeClient.StreamChatWithRetries(ctx, client.ChatRequest{
 		Model:     cfg.Model,
 		Prompt:    cfg.Prompt,
 		MaxTokens: cfg.MaxTokens,
 	}, func(content string) {
 		fmt.Fprint(stdout, content)
-	})
+	}, cfg.Retries, stdout)
 }

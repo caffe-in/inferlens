@@ -39,7 +39,7 @@ func (m *Serve) RegisterFlags(fs *flag.FlagSet, defaults config.ModeDefaults) {
 }
 
 func (m *Serve) Config() (config.Config, error) {
-	return config.NewServe(
+	cfg, err := config.NewServe(
 		m.runtime,
 		m.endpoint,
 		m.metricsEndpoint,
@@ -48,6 +48,8 @@ func (m *Serve) Config() (config.Config, error) {
 		m.maxTokens,
 		m.timeout,
 	)
+	cfg.Retries = m.retries
+	return cfg, err
 }
 
 func (Serve) Ping(ctx context.Context, cfg config.Config, stdout io.Writer) error {

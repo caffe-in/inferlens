@@ -26,7 +26,9 @@ func (m *API) RegisterFlags(fs *flag.FlagSet, defaults config.ModeDefaults) {
 }
 
 func (m *API) Config() (config.Config, error) {
-	return config.NewAPI(m.endpoint, m.model, m.prompt, m.maxTokens, m.timeout)
+	cfg, err := config.NewAPI(m.endpoint, m.model, m.prompt, m.maxTokens, m.timeout)
+	cfg.Retries = m.retries
+	return cfg, err
 }
 
 func (API) Ping(ctx context.Context, cfg config.Config, stdout io.Writer) error {

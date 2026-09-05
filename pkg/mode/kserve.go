@@ -47,6 +47,7 @@ func (k *KServe) Config() (config.Config, error) {
 	cfg.Namespace = k.namespace
 	cfg.Kubeconfig = k.kubeconfig
 	cfg.KubeContext = k.kubeContext
+	cfg.Retries = k.retries
 	return cfg, nil
 }
 

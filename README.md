@@ -1,10 +1,10 @@
 # inferlens
 A lightweight observability and debugging CLI for self-hosted LLM inference services.
 
-## v0.0.5 Goal
-InferLens `ping` probes one inference request and prints a readable client timeline plus runtime-aware server observations.
+## v0.0.6 Goal
+InferLens `ping` probes one inference request and prints a readable client timeline plus runtime-aware server observations. New in v0.0.6: online probes gain retry with capped exponential backoff, and `inferlens bench` measures TTFT/total latency percentiles and throughput across N requests at C concurrency.
 
-`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM, llama.cpp, and SGLang. New in v0.0.5: `ping kserve` combines a read-only KServe control-plane snapshot, predictor Pod state, and one OpenAI-compatible streaming request against a user-provided endpoint. `ping api` remains runtime-agnostic and `ping offline` still runs local vLLM offline inference through the bundled Python helper.
+`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM, llama.cpp, and SGLang. `ping kserve` combines a read-only KServe control-plane snapshot, predictor Pod state, and one OpenAI-compatible streaming request. `ping api` remains runtime-agnostic and `ping offline` still runs local vLLM offline inference through the bundled Python helper.
 
 ## Requirements
 - Go 1.23+
@@ -142,6 +142,20 @@ Terminal 2 — probe:
 - Control-plane and data-plane results are reported separately. Exit is non-zero when the InferenceService cannot be read, its `Ready` condition is not `True`, predictor Pods cannot be listed, or the streaming request fails. Zero predictor Pods alone is not a failure — serverless services scale to zero.
 - Direct engine-level metrics remain the job of `ping serve`; `ping kserve` prints ServingRuntime names and Pod images as facts without guessing the engine.
 
+## Benchmark
+`inferlens bench` sends N streaming chat requests at C concurrency and reports client-side latency and throughput. It works against any OpenAI-compatible streaming endpoint and does not collect server observations.
+
+```bash
+./artifacts/inferlens bench \
+  --endpoint http://localhost:8000 \
+  --model Qwen/Qwen2.5-0.5B-Instruct \
+  --prompt "count from 1 to 10" \
+  --requests 20 \
+  --concurrency 4
+```
+
+Output includes request wall time, success/failure counts, req/s and tok/s throughput, and nearest-rank P50/P95/max for first-token and total latency over successful requests. Partial failures are reported (aggregated by error message) and only fail the run when every request fails. Every request sends the same prompt; prefix-cache effects are the user's concern. Warmup requests and prompt randomization are not implemented.
+
 ## Configuration
 InferLens reads ping defaults in this order, with later layers overriding earlier layers:
 
@@ -189,11 +203,12 @@ API tokens are not read from config files or CLI flags.
 - `--namespace`, `--kubeconfig`, `--context`: cluster selection for `kserve`, defaulting to kubectl's precedence
 - `--metrics-endpoint`: Prometheus metrics URL for the selected `serve` runtime
 - `--python`: Python interpreter for `offline`
+- `--retries`: retry transient failures (connection errors, 5xx) with capped exponential backoff; only before any content has streamed, default `0`
 - `--max-tokens`: maximum generated tokens, defaults to `128`
 - `--timeout`: probe timeout; `offline` defaults to `0`, meaning no active timeout
 
 ## Notes
-- v0.0.5 is still a single active probe, not a benchmark loop.
+- v0.0.6 remains a single active probe (`ping`) plus one load-free latency measurement command (`bench`).
 - `serve` ignores `OPENAI_API_KEY` so local probes do not inherit unrelated credentials.
 - vLLM, llama.cpp, and SGLang are the native runtimes. Other OpenAI-compatible runtimes remain usable through `ping api` without server observations.
 - `ping kserve` is the first consumer of the runtime-neutral probe layer against KServe-hosted deployments; it reads cluster state only and never writes.
