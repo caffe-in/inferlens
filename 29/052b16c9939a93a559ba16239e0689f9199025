@@ -1,0 +1,73 @@
+pkg/mode/mode.go
+  s_1482efc1f6407b::t_0ce9f61c883498 18,21-25,42-43
+output/kserve.go
+  s_1482efc1f6407b::t_d2e7c9e0f57335 195-201
+  s_1482efc1f6407b::t_87508deca000ab 1-52,57-68,72,75-94,96-167,169-194
+  s_1482efc1f6407b::t_8d32f046f6f882 95
+  s_1482efc1f6407b::t_de32f0455b4c1a 53-56
+  s_1482efc1f6407b::t_20c266f3da2f6a 69-71,73-74
+  s_1482efc1f6407b::t_add6e0faa680e1 168
+kserve/collector_test.go
+  s_1482efc1f6407b::t_f9062412099b9e 68-70,72
+  s_1482efc1f6407b::t_d73376001c1bb1 1-67,71,73-114,116-139,141-148,150-155,157-175,177-207
+  s_1482efc1f6407b::t_e45d5d6b0376e6 140
+  s_1482efc1f6407b::t_850d929cdb058d 176
+  s_1482efc1f6407b::t_4dc19d5e8d368a 115
+pkg/ping/ping.go
+  s_1482efc1f6407b::t_b2474310948d11 31
+cfg/default.yaml
+  s_1482efc1f6407b::t_2de4bdbec8b1ad 10-11
+config/config.go
+  s_1482efc1f6407b::t_89479b44794b06 24-27
+  s_1482efc1f6407b::t_e0c04cebef7d3d 66-80
+pkg/mode/kserve_test.go
+  s_1482efc1f6407b::t_6e9c8307a6332b 1-199
+README.md
+  s_1482efc1f6407b::t_d3e0e25dd226a8 164-165
+  s_1482efc1f6407b::t_4bc84ddc8ceb8b 4,7,12
+  s_1482efc1f6407b::t_0624091dfa100b 196,198-200
+  s_1482efc1f6407b::t_afc81c37f50140 119-144
+  s_1482efc1f6407b::t_696ef94e7f33e9 187-189
+config/defaults.go
+  s_1482efc1f6407b::t_43231710855f09 147
+  s_1482efc1f6407b::t_356a30a616c64b 118
+  s_1482efc1f6407b::t_7e751cb0e92f11 69-70
+  s_1482efc1f6407b::t_0e9c15a5264c75 32,52-54
+pkg/mode/kserve.go
+  s_1482efc1f6407b::t_58deff62d0beaf 1-67,72-86,89,96-120
+  s_1482efc1f6407b::t_f9062412099b9e 68-71,87-88,90-95
+kserve/collector.go
+  s_1482efc1f6407b::t_f9062412099b9e 39-41,43,176
+  s_1482efc1f6407b::t_893be4e6b051b2 1-7,9-11,13-38,42,44-58,62-175,177-223,225-229,231-236,238-244,246-264,267-279
+  s_1482efc1f6407b::t_258c887c6c61a2 230
+  s_1482efc1f6407b::t_48c8caab8a6234 59-61
+  s_1482efc1f6407b::t_eaea4023bbc598 245
+  s_1482efc1f6407b::t_d714d20175d240 12
+  s_1482efc1f6407b::t_76da19afc6e9df 237
+  s_1482efc1f6407b::t_94eed8442f5494 265-266
+  s_1482efc1f6407b::t_f0f9bf204567a0 8
+  s_1482efc1f6407b::t_8c54de8ba53956 224
+output/kserve_test.go
+  s_1482efc1f6407b::t_79c705ab795749 24
+  s_1482efc1f6407b::t_0f203c67498cb6 1-23,25-54,56-75,77-125,127,130-137
+  s_1482efc1f6407b::t_15dc95a90a54cb 55
+  s_1482efc1f6407b::t_f9062412099b9e 76,126,128-129
+cmd/inferlens/main.go
+  s_1482efc1f6407b::t_af9151a00a6fad 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "29052b16c9939a93a559ba16239e0689f9199025",
+  "prompts": {},
+  "sessions": {
+    "s_1482efc1f6407b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f90a5e063ffe88VzeVQVq1KNcf",
+        "model": "glm-5.3"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
