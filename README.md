@@ -1,14 +1,14 @@
 # inferlens
 A lightweight observability and debugging CLI for self-hosted LLM inference services.
 
-## v0.0.3 Goal
+## v0.0.4 Goal
 InferLens `ping` probes one inference request and prints a readable client timeline plus runtime-aware server observations.
 
-`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM and llama.cpp, while `ping api` remains runtime-agnostic for other OpenAI-compatible streaming APIs. `ping offline` continues to run local vLLM offline inference through the bundled Python helper.
+`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM, llama.cpp, and SGLang, while `ping api` remains runtime-agnostic for other OpenAI-compatible streaming APIs. `ping offline` continues to run local vLLM offline inference through the bundled Python helper.
 
 ## Requirements
 - Go 1.23+
-- For `ping serve`: a vLLM or llama.cpp OpenAI-compatible server
+- For `ping serve`: a vLLM, llama.cpp, or SGLang OpenAI-compatible server
 - For `ping offline`: a Python environment with `vllm` installed
 
 ## Quick Start
@@ -44,7 +44,7 @@ This is the same as:
 
 ## Ping Modes
 ### `ping serve`
-Use this for a local or self-hosted vLLM or llama.cpp server. It performs a best-effort `/health` check, reads Prometheus `/metrics` before and after one streaming chat completion, and maps runtime-specific metrics into common and native observations.
+Use this for a local or self-hosted vLLM, llama.cpp, or SGLang server. It performs a best-effort `/health` check, reads Prometheus `/metrics` before and after one streaming chat completion, and maps runtime-specific metrics into common and native observations.
 
 Probe vLLM (the default runtime):
 
@@ -74,7 +74,21 @@ Then select its adapter and endpoint explicitly:
 
 InferLens does not auto-detect the runtime. The global endpoint default remains `http://localhost:8000`, so llama.cpp users normally pass `--endpoint http://localhost:8080`. llama.cpp returns `501` from `/metrics` unless `llama-server` starts with `--metrics`.
 
-Health and metrics collection are best-effort. If either is unavailable, the inference probe can still succeed and the report preserves the client timeline. See the [vLLM server interfaces](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and [llama.cpp server interfaces](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) for runtime setup details.
+Probe SGLang: start the server with metrics enabled, then pass its endpoint explicitly:
+
+```bash
+python -m sglang.launch_server --model-path <model> --port 30000 --enable-metrics
+
+./artifacts/inferlens ping serve \
+  --runtime sglang \
+  --endpoint http://localhost:30000 \
+  --model <model> \
+  --prompt "hello"
+```
+
+SGLang disables Prometheus metrics unless the server starts with `--enable-metrics`; without it, observations show as unavailable while the probe itself still succeeds.
+
+Health and metrics collection are best-effort. If either is unavailable, the inference probe can still succeed and the report preserves the client timeline. See the [vLLM server interfaces](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html), [llama.cpp server interfaces](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), and [SGLang production metrics](https://docs.sglang.ai/references/production_metrics) for runtime setup details.
 
 ### `ping api`
 Use this for a user-provided OpenAI-compatible streaming API. It measures client-side streaming behavior only and does not select a runtime adapter or inspect server metrics.
@@ -87,7 +101,7 @@ OPENAI_API_KEY=... \
   --prompt "hello"
 ```
 
-`OPENAI_API_KEY` is optional. When it is empty, InferLens sends no `Authorization` header. API mode requires streaming chat completions in v0.0.3.
+`OPENAI_API_KEY` is optional. When it is empty, InferLens sends no `Authorization` header. API mode requires streaming chat completions in v0.0.4.
 
 ### `ping offline`
 Use this for one local vLLM offline inference. InferLens runs `scripts/vllm_offline_probe.py` internally and reports model load/generation timing.
@@ -140,7 +154,7 @@ API tokens are not read from config files or CLI flags.
 - `--config`: ping YAML config path
 - `--model`: model name
 - `--prompt`: prompt text
-- `--runtime`: native observer for `serve`; `vllm` (default) or `llamacpp`
+- `--runtime`: native observer for `serve`; `vllm` (default), `llamacpp`, or `sglang`
 - `--endpoint`: OpenAI-compatible base URL for `serve` or `api`
 - `--metrics-endpoint`: Prometheus metrics URL for the selected `serve` runtime
 - `--python`: Python interpreter for `offline`
@@ -148,9 +162,9 @@ API tokens are not read from config files or CLI flags.
 - `--timeout`: probe timeout; `offline` defaults to `0`, meaning no active timeout
 
 ## Notes
-- v0.0.3 is still a single active probe, not a benchmark loop.
+- v0.0.4 is still a single active probe, not a benchmark loop.
 - `serve` ignores `OPENAI_API_KEY` so local probes do not inherit unrelated credentials.
-- vLLM and llama.cpp are the native runtimes in v0.0.3. Other OpenAI-compatible runtimes remain usable through `ping api` without server observations.
-- Runtime adapters are the data-plane foundation for a future KServe collector; v0.0.3 does not add Kubernetes or KServe behavior.
+- vLLM, llama.cpp, and SGLang are the native runtimes in v0.0.4. Other OpenAI-compatible runtimes remain usable through `ping api` without server observations.
+- Runtime adapters are the data-plane foundation for a future KServe collector; v0.0.4 does not add Kubernetes or KServe behavior.
 - Local build artifacts should go under `artifacts/`, which is intentionally gitignored.
 - Grafana, benchmarking, Kubernetes scheduling, and MLOps workflows are future milestones.

@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"inferlens/pkg/ping"
+	"inferlens/runtime"
 )
 
 func main() {
@@ -36,7 +38,7 @@ func printRootUsage() {
 	fmt.Fprintln(os.Stderr, "InferLens probes self-hosted and OpenAI-compatible inference servers.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  inferlens ping [serve] --runtime <vllm|llamacpp> --model <model> --prompt <text> [--endpoint <url>]")
+	fmt.Fprintf(os.Stderr, "  inferlens ping [serve] --runtime <%s> --model <model> --prompt <text> [--endpoint <url>]\n", strings.Join(runtime.Names(), "|"))
 	fmt.Fprintln(os.Stderr, "  inferlens ping api --model <model> --prompt <text> --endpoint <url>")
 	fmt.Fprintln(os.Stderr, "  inferlens ping offline --model <model> --prompt <text> [--python python3]")
 }
