@@ -1,0 +1,23 @@
+runtime/runtime.go
+  s_1482efc1f6407b::t_5f0c803c986c7a 55
+pkg/ping/ping.go
+  s_1482efc1f6407b::t_2656b974e63787 64-66,68-71,75-93,97,99,101,104
+output/output.go
+  s_1482efc1f6407b::t_758b210f35fcd7 238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "649a0bdb4b98d3b50617a0c47d230f67766bea47",
+  "prompts": {},
+  "sessions": {
+    "s_1482efc1f6407b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f90a5e063ffe88VzeVQVq1KNcf",
+        "model": "glm-5.3"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
