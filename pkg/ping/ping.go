@@ -28,7 +28,7 @@ func Run(args []string, stdout, stderr io.Writer) error {
 	selected.RegisterFlags(fs, defaults.ForMode(selected.Name()))
 
 	fs.Usage = func() {
-		fmt.Fprintf(stderr, "Usage: inferlens ping [serve|api|offline] --model <model> --prompt <text> [--endpoint <url>]\n")
+		fmt.Fprintf(stderr, "Usage: inferlens ping [%s] --model <model> --prompt <text> [--endpoint <url>]\n", strings.Join(mode.Names(), "|"))
 		if selected.UsageNote() != "" {
 			fmt.Fprintln(stderr, selected.UsageNote())
 		}

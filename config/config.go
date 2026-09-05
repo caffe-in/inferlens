@@ -21,6 +21,10 @@ type Config struct {
 	Prompt          string
 	MaxTokens       int
 	Timeout         time.Duration
+	Name            string
+	Namespace       string
+	Kubeconfig      string
+	KubeContext     string
 }
 
 func NewServe(
@@ -59,6 +63,21 @@ func NewAPI(endpoint, model, prompt string, maxTokens int, timeout time.Duration
 	cfg := newOnlineConfig(endpoint, "", model, prompt, maxTokens, timeout)
 	if cfg.Endpoint == "" {
 		return Config{}, errors.New("api endpoint is required; pass --endpoint or set OPENAI_BASE_URL")
+	}
+	if err := validateOnlineConfig(cfg); err != nil {
+		return Config{}, err
+	}
+	return cfg, nil
+}
+
+func NewKServe(name, endpoint, model, prompt string, maxTokens int, timeout time.Duration) (Config, error) {
+	cfg := newOnlineConfig(endpoint, "", model, prompt, maxTokens, timeout)
+	cfg.Name = strings.TrimSpace(name)
+	if cfg.Name == "" {
+		return Config{}, errors.New("inference service name is required; pass --name")
+	}
+	if cfg.Endpoint == "" {
+		return Config{}, errors.New("kserve endpoint is required; establish a port-forward and pass --endpoint")
 	}
 	if err := validateOnlineConfig(cfg); err != nil {
 		return Config{}, err

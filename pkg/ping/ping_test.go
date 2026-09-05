@@ -510,6 +510,28 @@ sglang:gen_throughput{model_name="m"} 86.5
 	)
 }
 
+func TestRunKServeValidatesBeforeExternalCalls(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	err := Run([]string{
+		"kserve",
+		"--model", "qwen",
+		"--prompt", "hello",
+	}, &stdout, &stderr)
+	if err == nil || !strings.Contains(err.Error(), "--name") {
+		t.Fatalf("expected missing --name error, got %v", err)
+	}
+
+	err = Run([]string{
+		"kserve",
+		"--name", "qwen",
+		"--model", "qwen",
+		"--prompt", "hello",
+	}, &stdout, &stderr)
+	if err == nil || !strings.Contains(err.Error(), "--endpoint") {
+		t.Fatalf("expected missing --endpoint error, got %v", err)
+	}
+}
+
 func writePingConfig(t *testing.T, content string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "inferlens.yaml")
