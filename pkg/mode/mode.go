@@ -15,7 +15,13 @@ const (
 	ServeName   = "serve"
 	APIName     = "api"
 	OfflineName = "offline"
+	KServeName  = "kserve"
 )
+
+// Names lists ping mode names in a stable order; usage strings derive from it.
+func Names() []string {
+	return []string{ServeName, APIName, OfflineName, KServeName}
+}
 
 type Mode interface {
 	Name() string
@@ -33,6 +39,8 @@ func ByName(name string) (Mode, bool) {
 		return &API{}, true
 	case OfflineName:
 		return &Offline{}, true
+	case KServeName:
+		return &KServe{}, true
 	default:
 		return nil, false
 	}

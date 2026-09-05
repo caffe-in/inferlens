@@ -7,3 +7,5 @@ api:
 offline:
   python: python3
   timeout: 0
+kserve:
+  timeout: 60s

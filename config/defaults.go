@@ -29,6 +29,7 @@ type PingDefaults struct {
 	Serve   ModeDefaults
 	API     ModeDefaults
 	Offline ModeDefaults
+	KServe  ModeDefaults
 }
 
 func BuiltinPingDefaults() PingDefaults {
@@ -48,6 +49,10 @@ func BuiltinPingDefaults() PingDefaults {
 			MaxTokens: DefaultMaxTokens,
 			Timeout:   0,
 		},
+		KServe: ModeDefaults{
+			MaxTokens: DefaultMaxTokens,
+			Timeout:   DefaultTimeout,
+		},
 	}
 }
 
@@ -61,6 +66,8 @@ func (d PingDefaults) ForMode(name string) ModeDefaults {
 		return d.API
 	case "offline":
 		return d.Offline
+	case "kserve":
+		return d.KServe
 	default:
 		return d.Serve
 	}
@@ -108,6 +115,7 @@ func mergePingConfigFile(defaults *PingDefaults, path string, required bool) err
 	mergeModeDefaults(&defaults.Serve, file.Serve)
 	mergeModeDefaults(&defaults.API, file.API)
 	mergeModeDefaults(&defaults.Offline, file.Offline)
+	mergeModeDefaults(&defaults.KServe, file.KServe)
 	return nil
 }
 
@@ -136,6 +144,7 @@ type pingConfig struct {
 	Serve   modeConfig `yaml:"serve"`
 	API     modeConfig `yaml:"api"`
 	Offline modeConfig `yaml:"offline"`
+	KServe  modeConfig `yaml:"kserve"`
 }
 
 type modeConfig struct {

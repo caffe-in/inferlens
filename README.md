@@ -1,14 +1,15 @@
 # inferlens
 A lightweight observability and debugging CLI for self-hosted LLM inference services.
 
-## v0.0.4 Goal
+## v0.0.5 Goal
 InferLens `ping` probes one inference request and prints a readable client timeline plus runtime-aware server observations.
 
-`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM, llama.cpp, and SGLang, while `ping api` remains runtime-agnostic for other OpenAI-compatible streaming APIs. `ping offline` continues to run local vLLM offline inference through the bundled Python helper.
+`inferlens ping` is equivalent to `inferlens ping serve`. Serve mode supports native observation adapters for vLLM, llama.cpp, and SGLang. New in v0.0.5: `ping kserve` combines a read-only KServe control-plane snapshot, predictor Pod state, and one OpenAI-compatible streaming request against a user-provided endpoint. `ping api` remains runtime-agnostic and `ping offline` still runs local vLLM offline inference through the bundled Python helper.
 
 ## Requirements
 - Go 1.23+
 - For `ping serve`: a vLLM, llama.cpp, or SGLang OpenAI-compatible server
+- For `ping kserve`: `kubectl` on PATH with read access to the target cluster
 - For `ping offline`: a Python environment with `vllm` installed
 
 ## Quick Start
@@ -115,6 +116,32 @@ Use this for one local vLLM offline inference. InferLens runs `scripts/vllm_offl
 
 There is no `--helper` flag; the helper path is an internal packaging detail.
 
+### `ping kserve`
+Use this to diagnose an existing KServe `InferenceService` from your machine. One command combines a read-only control-plane snapshot, predictor Pod state, and one streaming chat request. InferLens stays local: it never mutates cluster resources, manages port-forwards, or collects multi-replica runtime metrics.
+
+Terminal 1 — establish your own access path:
+
+```bash
+kubectl -n kserve-test port-forward svc/qwen-llama-predictor 8080:80
+```
+
+Terminal 2 — probe:
+
+```bash
+./artifacts/inferlens ping kserve \
+  --name qwen-llama \
+  --namespace kserve-test \
+  --endpoint http://localhost:8080 \
+  --model qwen2.5-1.5b-instruct \
+  --prompt "hello"
+```
+
+- `--name` and `--endpoint` are required; `--namespace`, `--kubeconfig`, and `--context` default to kubectl's own precedence.
+- The endpoint may include a route prefix, e.g. `http://127.0.0.1:8080/openai`.
+- Kubernetes access goes through your local `kubectl`; only `get` operations are used. No `OPENAI_API_KEY` is read in this mode.
+- Control-plane and data-plane results are reported separately. Exit is non-zero when the InferenceService cannot be read, its `Ready` condition is not `True`, predictor Pods cannot be listed, or the streaming request fails. Zero predictor Pods alone is not a failure — serverless services scale to zero.
+- Direct engine-level metrics remain the job of `ping serve`; `ping kserve` prints ServingRuntime names and Pod images as facts without guessing the engine.
+
 ## Configuration
 InferLens reads ping defaults in this order, with later layers overriding earlier layers:
 
@@ -134,6 +161,8 @@ api:
 offline:
   python: python3
   timeout: 0
+kserve:
+  timeout: 60s
 ```
 
 Use a custom config file with:
@@ -155,16 +184,19 @@ API tokens are not read from config files or CLI flags.
 - `--model`: model name
 - `--prompt`: prompt text
 - `--runtime`: native observer for `serve`; `vllm` (default), `llamacpp`, or `sglang`
-- `--endpoint`: OpenAI-compatible base URL for `serve` or `api`
+- `--endpoint`: OpenAI-compatible base URL for `serve`, `api`, or `kserve`
+- `--name`: InferenceService name for `kserve`
+- `--namespace`, `--kubeconfig`, `--context`: cluster selection for `kserve`, defaulting to kubectl's precedence
 - `--metrics-endpoint`: Prometheus metrics URL for the selected `serve` runtime
 - `--python`: Python interpreter for `offline`
 - `--max-tokens`: maximum generated tokens, defaults to `128`
 - `--timeout`: probe timeout; `offline` defaults to `0`, meaning no active timeout
 
 ## Notes
-- v0.0.4 is still a single active probe, not a benchmark loop.
+- v0.0.5 is still a single active probe, not a benchmark loop.
 - `serve` ignores `OPENAI_API_KEY` so local probes do not inherit unrelated credentials.
-- vLLM, llama.cpp, and SGLang are the native runtimes in v0.0.4. Other OpenAI-compatible runtimes remain usable through `ping api` without server observations.
-- Runtime adapters are the data-plane foundation for a future KServe collector; v0.0.4 does not add Kubernetes or KServe behavior.
+- vLLM, llama.cpp, and SGLang are the native runtimes. Other OpenAI-compatible runtimes remain usable through `ping api` without server observations.
+- `ping kserve` is the first consumer of the runtime-neutral probe layer against KServe-hosted deployments; it reads cluster state only and never writes.
+- Runtime adapters are the data-plane foundation for a future KServe collector; v0.0.5 does not add in-cluster agents or multi-replica metric aggregation.
 - Local build artifacts should go under `artifacts/`, which is intentionally gitignored.
 - Grafana, benchmarking, Kubernetes scheduling, and MLOps workflows are future milestones.
