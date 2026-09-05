@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"inferlens/client"
@@ -28,7 +29,7 @@ func (Serve) UsageNote() string { return "" }
 
 func (m *Serve) RegisterFlags(fs *flag.FlagSet, defaults config.ModeDefaults) {
 	m.baseOptions.register(fs, defaults)
-	fs.StringVar(&m.runtime, "runtime", defaults.Runtime, "Runtime observer: vllm or llamacpp")
+	fs.StringVar(&m.runtime, "runtime", defaults.Runtime, "Runtime observer: "+strings.Join(runtime.Names(), ", "))
 	fs.StringVar(
 		&m.metricsEndpoint,
 		"metrics-endpoint",

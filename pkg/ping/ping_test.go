@@ -299,6 +299,36 @@ func TestRunServeCallsHealthMetricsAndChatInOrder(t *testing.T) {
 	}
 }
 
+func TestRunServeSGLangReportsObservations(t *testing.T) {
+	server := newRuntimeServer(t, nil)
+	defer server.Close()
+
+	var stdout, stderr bytes.Buffer
+	err := Run([]string{
+		"serve",
+		"--runtime", "sglang",
+		"--endpoint", server.URL,
+		"--model", "qwen",
+		"--prompt", "hello",
+	}, &stdout, &stderr)
+	if err != nil {
+		t.Fatalf("unexpected error: %v\nstderr: %s", err, stderr.String())
+	}
+
+	out := stdout.String()
+	for _, want := range []string{
+		"runtime: sglang",
+		"prompt_tokens: +10  [sglang:prompt_tokens_total]",
+		"generated_tokens: +15  [sglang:generation_tokens_total]",
+		"gen_throughput: 86.5 tok/s  [sglang:gen_throughput]",
+		"sglang observations:",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("expected report to contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestRunServeBestEffortCollection(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -462,6 +492,11 @@ llamacpp:tokens_predicted_seconds_total %d
 llamacpp:requests_processing 0
 llamacpp:requests_deferred 0
 llamacpp:n_tokens_max 4096
+sglang:prompt_tokens_total{model_name="m"} %d
+sglang:generation_tokens_total{model_name="m"} %d
+sglang:num_running_reqs{model_name="m"} 0
+sglang:num_queue_reqs{model_name="m"} 0
+sglang:gen_throughput{model_name="m"} 86.5
 `,
 		call,
 		call*10,
@@ -470,6 +505,8 @@ llamacpp:n_tokens_max 4096
 		call,
 		call*20,
 		call*2,
+		call*10,
+		call*15,
 	)
 }
 

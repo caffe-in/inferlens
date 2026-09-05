@@ -13,6 +13,7 @@ import (
 const (
 	NameVLLM     = "vllm"
 	NameLlamaCPP = "llamacpp"
+	NameSGLang   = "sglang"
 )
 
 // Observer maps before/after Prometheus snapshots for a specific runtime
@@ -25,7 +26,7 @@ type Observer interface {
 // It is the single source of truth for which runtimes are supported; both
 // config validation and observer selection should derive from it.
 func Names() []string {
-	return []string{NameVLLM, NameLlamaCPP}
+	return []string{NameVLLM, NameLlamaCPP, NameSGLang}
 }
 
 // NewObserver returns the Observer for the given runtime name. It returns an
@@ -36,6 +37,8 @@ func NewObserver(name string) (Observer, error) {
 		return VLLM{}, nil
 	case NameLlamaCPP:
 		return LlamaCPP{}, nil
+	case NameSGLang:
+		return SGLang{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported runtime %q; expected %s", name, strings.Join(Names(), " or "))
 	}
