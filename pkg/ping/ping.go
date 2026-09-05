@@ -61,53 +61,45 @@ func Run(args []string, stdout, stderr io.Writer) error {
 	return selected.Ping(ctx, cfg, stdout)
 }
 
+// ponytail: the mode keyword must be the first non-flag token (every documented
+// invocation puts it there), so no per-flag "takes a value" list is needed.
+// Ceiling: `ping --prompt serve` as a bare first value now needs `ping serve --prompt serve`.
 func parseArgs(args []string) (mode.Mode, []string, string, error) {
-	var selected mode.Mode = &mode.Serve{}
-	modeSelected := false
-	configPath := ""
-	parsed := make([]string, 0, len(args))
+	configPath, err := extractConfigPath(args)
+	if err != nil {
+		return nil, nil, "", err
+	}
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
+		if arg == "--config" {
+			i++ // skip its value
+			continue
+		}
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		if selected, ok := mode.ByName(arg); ok {
+			withoutMode := append(append([]string{}, args[:i]...), args[i+1:]...)
+			return selected, withoutMode, configPath, nil
+		}
+		break // first non-flag token is not a mode; leave it for fs.Parse to reject
+	}
+
+	return &mode.Serve{}, args, configPath, nil
+}
+
+func extractConfigPath(args []string) (string, error) {
+	for i, arg := range args {
 		switch {
 		case arg == "--config":
 			if i+1 >= len(args) {
-				return nil, nil, "", fmt.Errorf("flag needs an argument: --config")
+				return "", fmt.Errorf("flag needs an argument: --config")
 			}
-			configPath = args[i+1]
-			parsed = append(parsed, arg, args[i+1])
-			i++
+			return args[i+1], nil
 		case strings.HasPrefix(arg, "--config="):
-			configPath = strings.TrimPrefix(arg, "--config=")
-			parsed = append(parsed, arg)
-		case !modeSelected && !strings.HasPrefix(arg, "-"):
-			next, ok := mode.ByName(arg)
-			if ok {
-				selected = next
-				modeSelected = true
-				continue
-			}
-			parsed = append(parsed, arg)
-		default:
-			parsed = append(parsed, arg)
-			if flagTakesValue(arg) && i+1 < len(args) {
-				i++
-				parsed = append(parsed, args[i])
-			}
+			return strings.TrimPrefix(arg, "--config="), nil
 		}
 	}
-
-	return selected, parsed, configPath, nil
-}
-
-func flagTakesValue(arg string) bool {
-	if !strings.HasPrefix(arg, "--") || strings.Contains(arg, "=") {
-		return false
-	}
-	switch arg {
-	case "--model", "--prompt", "--endpoint", "--metrics-endpoint", "--runtime", "--max-tokens", "--timeout", "--python":
-		return true
-	default:
-		return false
-	}
+	return "", nil
 }

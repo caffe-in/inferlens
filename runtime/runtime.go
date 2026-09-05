@@ -52,8 +52,7 @@ type Format int
 
 // Observation formats supported by the terminal renderer.
 const (
-	FormatUnknown Format = iota
-	FormatCounterDelta
+	FormatCounterDelta Format = iota
 	FormatGaugeBeforeAfter
 	FormatRatioPercentage
 	FormatSingleRate

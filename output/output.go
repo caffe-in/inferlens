@@ -235,10 +235,7 @@ func healthText(report PingReport) string {
 	case report.Health.StatusCode != 0:
 		return fmt.Sprintf("unhealthy (status %d)", report.Health.StatusCode)
 	default:
-		// runtime.CheckHealth only returns a zero-value Health alongside a
-		// non-nil error (handled above), so StatusCode == 0 here should be
-		// unreachable. Kept as a defensive fallback in case that contract
-		// ever changes.
+		// ponytail: unreachable per CheckHealth's contract; one-line fallback, no defense-in-depth
 		return "unavailable"
 	}
 }
