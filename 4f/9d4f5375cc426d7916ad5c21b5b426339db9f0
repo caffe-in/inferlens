@@ -1,0 +1,55 @@
+output/bench.go
+  s_1482efc1f6407b::t_e3274b2397230a 1-82
+cmd/inferlens/main.go
+  s_1482efc1f6407b::t_a7f0622147719c 8
+  s_1482efc1f6407b::t_82d1ee9c64966a 29-30
+  s_1482efc1f6407b::t_40fb1214f4a982 48
+bench/bench_test.go
+  s_1482efc1f6407b::t_fb8418fa8e72c1 1-4,6-11,14-143,147-150,152-160
+  s_1482efc1f6407b::t_b83074e070d5a0 144-146
+  s_1482efc1f6407b::t_ba262aa6ddcbf6 151
+  s_1482efc1f6407b::t_e420f5a9143427 5,12-13
+README.md
+  s_1482efc1f6407b::t_355a7dcc314c8f 211
+  s_1482efc1f6407b::t_875559622b7023 206
+  s_1482efc1f6407b::t_d65e97ad473f80 145-158
+  s_1482efc1f6407b::t_0a288c7a1f6b8e 4-5,7
+client/retry.go
+  s_1482efc1f6407b::t_0df9c40d70666e 1-51
+client/retry_test.go
+  s_1482efc1f6407b::t_d12f8f552861be 1-80,87-125
+  s_1482efc1f6407b::t_fbc4b0160d506d 81-86
+pkg/mode/api.go
+  s_1482efc1f6407b::t_bc5c0f9817348a 29-31
+config/config.go
+  s_1482efc1f6407b::t_96f3f2ec3c4161 24
+pkg/mode/mode.go
+  s_1482efc1f6407b::t_6148ebf8e49209 55,64,68,74
+pkg/mode/serve.go
+  s_1482efc1f6407b::t_b0d83d60006c51 42,51-52
+bench/bench.go
+  s_1482efc1f6407b::t_5eb44e29fcc189 1-10,12-79,82-91,97-111,113-120,122-196,198-214
+  s_1482efc1f6407b::t_c4fcb73c76ffc0 11
+  s_1482efc1f6407b::t_4c2566a1ca4b5b 112,121
+  s_1482efc1f6407b::t_cad0054259a986 197
+  s_1482efc1f6407b::t_517b1b67aba035 92-96
+  s_1482efc1f6407b::t_c62659811695c4 80-81
+pkg/mode/kserve.go
+  s_1482efc1f6407b::t_46ee0506c41454 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.43-trip",
+  "base_commit_sha": "4f9d4f5375cc426d7916ad5c21b5b426339db9f0",
+  "prompts": {},
+  "sessions": {
+    "s_1482efc1f6407b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f90a5e063ffe88VzeVQVq1KNcf",
+        "model": "glm-5.3"
+      },
+      "human_author": "zhangq7 <zhangq7@trip.com>"
+    }
+  }
+}
